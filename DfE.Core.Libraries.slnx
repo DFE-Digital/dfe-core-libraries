@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DfE.Core.Libraries.CleanArchitecture/DfE.Core.Libraries.CleanArchitecture.csproj" />
+  </Folder>
+</Solution>
