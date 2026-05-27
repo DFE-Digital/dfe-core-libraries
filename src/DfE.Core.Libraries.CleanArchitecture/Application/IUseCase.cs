@@ -1,4 +1,5 @@
 ﻿namespace DfE.Core.Libraries.CleanArchitecture.Application;
+
 /// <summary>
 /// Defines a use-case with an input request and an expected response.
 /// </summary>

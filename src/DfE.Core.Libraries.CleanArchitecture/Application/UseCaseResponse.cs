@@ -1,4 +1,6 @@
-﻿/// <summary>
+﻿namespace DfE.Core.Libraries.CleanArchitecture.Application;
+
+/// <summary>
 /// Represents the outcome of a typical use-case operation,
 /// including success/failure state, an optional model object, and error information.
 /// </summary>
@@ -14,8 +16,6 @@
 /// Consumers should check both <see cref="SuccessfulRequest"/> and <see cref="HasModel"/> 
 /// before using the <see cref="Model"/> property.
 /// </remarks>
-namespace DfE.Core.Libraries.CleanArchitecture.Application;
-
 public sealed class UseCaseResponse<TModel>
 {
     /// <summary>

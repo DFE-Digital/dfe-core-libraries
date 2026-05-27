@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/DfE.Core.Libraries.CleanArchitecture/DfE.Core.Libraries.CleanArchitecture.csproj" />
+    <Project Path="src/DfE.Core.Libraries.CrossCutting/DfE.Core.Libraries.CrossCutting.csproj" />
   </Folder>
 </Solution>
