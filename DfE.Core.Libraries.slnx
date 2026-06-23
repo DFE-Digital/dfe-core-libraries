@@ -1,6 +1,9 @@
 <Solution>
   <Folder Name="/src/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
     <Project Path="src/DfE.Core.Libraries.CleanArchitecture/DfE.Core.Libraries.CleanArchitecture.csproj" />
     <Project Path="src/DfE.Core.Libraries.CrossCutting/DfE.Core.Libraries.CrossCutting.csproj" />
+    <Project Path="src/DfE.Core.Libraries.Testing/DfE.Core.Libraries.Testing.csproj" />
   </Folder>
 </Solution>
