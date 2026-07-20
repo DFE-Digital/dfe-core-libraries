@@ -46,7 +46,7 @@ public static class ContainerBuilderExtensions
             TContainer,
             TConfiguration>
     {
-        string[] args = options.StartupArguments
+        string?[] args = options.StartupArguments
             .SelectMany(
                 kv => kv.Value.SelectMany(
                     value => new[]

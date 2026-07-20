@@ -45,15 +45,7 @@ public sealed class ContainerOptions
     }
 
     public int? PublicPort { get; set; } = null;
-    public IEnumerable<StartupArgument> StartupArguments { get; set; } = [];
+    public IEnumerable<StartupArgument>? StartupArguments { get; set; } = [];
     public IEnumerable<ContainerResourceMapping>? CopyResourcesIntoContainerBeforeInit { get; set; } = [];
 
 }
-
-public sealed record StartupArgument(string Key, string[] Value);
-
-public sealed record ContainerResourceMapping(
-    string Source,
-    string Destination,
-    bool ReadOnly = true,
-    bool Executable = false);
