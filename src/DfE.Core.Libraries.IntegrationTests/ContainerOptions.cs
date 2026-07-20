@@ -1,0 +1,59 @@
+﻿namespace DfE.Core.Libraries.IntegrationTests.Abstractions;
+
+public sealed class ContainerOptions
+{
+
+    public string Registry { get; set; } = string.Empty;
+
+    public string Owner { get; set; } = string.Empty;
+
+#nullable disable
+    public string ImageName { get; set; }
+#nullable enable
+    public string? ImageTag { get; set; } = "latest";
+    public string? Digest { get; set; }
+
+    public string Image
+    {
+        get
+        {
+            string imageReference;
+
+            if (!string.IsNullOrWhiteSpace(Registry))
+            {
+                imageReference = string.IsNullOrWhiteSpace(Owner)
+                        ? $"{Registry}/{ImageName}"
+                        : $"{Registry}/{Owner}/{ImageName}";
+            }
+            else
+            {
+                imageReference = !string.IsNullOrWhiteSpace(Owner) ? $"{Owner}/{ImageName}" : ImageName;
+            }
+
+            if (!string.IsNullOrWhiteSpace(ImageTag))
+            {
+                imageReference += $":{ImageTag}";
+            }
+
+            if (!string.IsNullOrWhiteSpace(Digest))
+            {
+                imageReference += $"@{Digest}";
+            }
+
+            return imageReference;
+        }
+    }
+
+    public int? PublicPort { get; set; } = null;
+    public IEnumerable<StartupArgument> StartupArguments { get; set; } = [];
+    public IEnumerable<ContainerResourceMapping>? CopyResourcesIntoContainerBeforeInit { get; set; } = [];
+
+}
+
+public sealed record StartupArgument(string Key, string[] Value);
+
+public sealed record ContainerResourceMapping(
+    string Source,
+    string Destination,
+    bool ReadOnly = true,
+    bool Executable = false);

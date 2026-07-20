@@ -1,4 +1,6 @@
-﻿using DfE.Core.Libraries.IntegrationTests.Database.Abstractions;
+﻿using System.Text.RegularExpressions;
+using DfE.Core.Libraries.IntegrationTests.Abstractions;
+using DfE.Core.Libraries.IntegrationTests.Database.Abstractions;
 using DfE.Core.Libraries.IntegrationTests.Database.Postgres;
 using DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container;
 using Microsoft.Extensions.Configuration;
@@ -24,9 +26,8 @@ public static class ServiceCollectionExtensions
     private static IServiceCollection AddPostgresOptions(this IServiceCollection services, IConfiguration configuration)
     {
         // ContainerOptions
-        services.AddOptions<PostgresContainerOptions>()
-            .Bind(configuration.GetRequiredSection(nameof(PostgresContainerOptions)))
-            .Validate(t => !string.IsNullOrWhiteSpace(t.ImageTag), failureMessage: "Image tag cannot be empty")
+        services.AddOptions<ContainerOptions>()
+            .Bind(configuration.GetRequiredSection(nameof(ContainerOptions)))
             .Validate(t => !string.IsNullOrWhiteSpace(t.ImageName), failureMessage: "Image name cannot be empty")
             .ValidateOnStart()
             .RegisterValueFromIOptions();

@@ -1,16 +1,17 @@
-﻿using DfE.Core.Libraries.IntegrationTests.Database.Abstractions;
+﻿using DfE.Core.Libraries.IntegrationTests.Abstractions;
+using DfE.Core.Libraries.IntegrationTests.Database.Abstractions;
 using DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container;
 
 namespace DfE.Core.Libraries.IntegrationTests.Database.Postgres;
 
 internal sealed class PostgresDatabaseFactory : IDatabaseFactory
 {
-    private readonly PostgresContainerOptions _containerOptions;
+    private readonly ContainerOptions _containerOptions;
     private readonly PostgresDatabaseOptions _databaseOptions;
     private readonly IContainerFactory _containerFactory;
 
     public PostgresDatabaseFactory(
-        PostgresContainerOptions containerOptions,
+        ContainerOptions containerOptions,
         PostgresDatabaseOptions databaseOptions,
         IContainerFactory containerFactory)
     {
