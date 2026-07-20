@@ -1,4 +1,5 @@
-﻿using DfE.Core.Libraries.IntegrationTests.Database.Abstractions;
+﻿using DfE.Core.Libraries.IntegrationTests.Abstractions;
+using DfE.Core.Libraries.IntegrationTests.Database.Abstractions;
 using DotNet.Testcontainers.Containers;
 using Npgsql;
 
@@ -15,7 +16,7 @@ internal sealed class PostgresContainerDatabase : IDatabase
     private string? _connectionString;
 
     public PostgresContainerDatabase(
-        PostgresContainerOptions containerOptions,
+        ContainerOptions containerOptions,
         PostgresDatabaseOptions databaseOptions,
         IContainerFactory containerFactory)
     {

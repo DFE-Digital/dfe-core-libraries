@@ -1,4 +1,4 @@
-﻿using DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Extensions;
+﻿using DfE.Core.Libraries.IntegrationTests.Abstractions;
 using DotNet.Testcontainers.Containers;
 using Testcontainers.PostgreSql;
 
@@ -7,9 +7,9 @@ namespace DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container;
 internal sealed class PostgresBuilderContainerFactory : IContainerFactory
 {
     private readonly PostgresDatabaseOptions _dbOptions;
-    private readonly PostgresContainerOptions _containerOptions;
+    private readonly ContainerOptions _containerOptions;
 
-    public PostgresBuilderContainerFactory(PostgresDatabaseOptions dbOptions, PostgresContainerOptions containerOptions)
+    public PostgresBuilderContainerFactory(PostgresDatabaseOptions dbOptions, ContainerOptions containerOptions)
     {
         _dbOptions = dbOptions;
         _containerOptions = containerOptions;
@@ -23,10 +23,10 @@ internal sealed class PostgresBuilderContainerFactory : IContainerFactory
                 .WithDatabase(_dbOptions.Database)
                 .WithUsername(_dbOptions.Username)
                 .WithPassword(_dbOptions.Password)
-                .WithExposedPorts(_containerOptions)
-                .WithStartupCommands(_containerOptions)
+                .WithExposedPorts<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(_containerOptions, PostgreSqlBuilder.PostgreSqlPort)
+                .WithStartupCommands<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(_containerOptions)
                 // Add files that need to be copied into the container before it starts e.g. .sql files to be applied at startup
-                .WithMountedResources(_containerOptions.CopyBeforeContainerInit ?? [])
+                .WithMountedResources<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(_containerOptions.CopyResourcesIntoContainerBeforeInit ?? [])
                 // forces fresh container state - no mounted volume reuse
                 .WithCleanUp(true);
 

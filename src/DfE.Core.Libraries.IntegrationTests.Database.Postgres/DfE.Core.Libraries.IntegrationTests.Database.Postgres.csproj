@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DfE.Core.Libraries.IntegrationTests.Database.Abstractions\DfE.Core.Libraries.IntegrationTests.Database.Abstractions.csproj" />
+    <ProjectReference Include="..\DfE.Core.Libraries.IntegrationTests\DfE.Core.Libraries.IntegrationTests.csproj" />
   </ItemGroup>
 
 </Project>
