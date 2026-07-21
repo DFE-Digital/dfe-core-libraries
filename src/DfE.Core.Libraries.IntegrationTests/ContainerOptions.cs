@@ -43,7 +43,7 @@ public sealed class ContainerOptions
         }
     }
     public string HostName { get; set; } = "localhost";
-    public int? PublicPort { get; set; } = null;
+    public IEnumerable<PortMapping>? PortMappings { get; set; }
     public IEnumerable<StartupArgument>? StartupArguments { get; set; } = [];
     public IEnumerable<ContainerResourceMapping>? CopyResourcesIntoContainerBeforeInit { get; set; } = [];
 }
