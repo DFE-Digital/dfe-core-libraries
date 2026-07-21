@@ -17,6 +17,23 @@ internal sealed class PostgresBuilderContainerFactory : IContainerFactory
 
     public IContainer Create()
     {
+
+        IEnumerable<PortMapping> portMappings = _containerOptions.PortMappings ?? [];
+
+        if (!portMappings.Any(t => t.ContainerPort == PostgreSqlBuilder.PostgreSqlPort))
+        {
+            portMappings =
+            [
+                ..portMappings,
+                new PortMapping
+                {
+                    PublicPort = null,
+                    ContainerPort = PostgreSqlBuilder.PostgreSqlPort
+                }
+            ];
+        }
+
+
         // Important builder is immuteable so each configuration will create a new instance with configuration applied
         PostgreSqlBuilder builder =
             new PostgreSqlBuilder(_containerOptions.Image)
@@ -25,7 +42,7 @@ internal sealed class PostgresBuilderContainerFactory : IContainerFactory
                 .WithPassword(_dbOptions.Password)
                 .WithExposedPorts<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(
                     containerPort: PostgreSqlBuilder.PostgreSqlPort,
-                    exposedPort: _containerOptions.PublicPort)
+                    exposedPort: _containerOptions.PortMappings)
                 .WithStartupCommands<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(_containerOptions.StartupArguments)
                 // Add files that need to be copied into the container before it starts e.g. .sql files to be applied at startup
                 .WithMountedResources<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(_containerOptions.CopyResourcesIntoContainerBeforeInit)

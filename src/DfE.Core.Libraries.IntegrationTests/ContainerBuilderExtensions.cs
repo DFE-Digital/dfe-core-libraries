@@ -11,8 +11,7 @@ public static class ContainerBuilderExtensions
         TContainer,
         TConfiguration>(
         this TBuilder builder,
-        ushort containerPort,
-        int? exposedPort = null)
+        IEnumerable<PortMapping> portMappings)
     where TContainer : IContainer
     where TConfiguration : IContainerConfiguration
     where TBuilder : ContainerBuilder<
@@ -20,16 +19,20 @@ public static class ContainerBuilderExtensions
             TContainer,
             TConfiguration>
     {
-        builder = builder.WithExposedPort(containerPort);
+        foreach (PortMapping portMapping in portMappings)
+        {
+            builder = builder.WithExposedPort(portMapping.ContainerPort);
 
-        return exposedPort.HasValue
-            ? builder.WithPortBinding(
-                exposedPort.Value,
-                containerPort)
+            builder = portMapping.PublicPort.HasValue
+                ? builder.WithPortBinding(
+                    portMapping.PublicPort.Value,
+                    portMapping.ContainerPort)
+                : builder.WithPortBinding(
+                    portMapping.ContainerPort,
+                    assignRandomHostPort: true);
+        }
 
-            : builder.WithPortBinding(
-                containerPort,
-                assignRandomHostPort: true);
+        return builder;
     }
 
 
