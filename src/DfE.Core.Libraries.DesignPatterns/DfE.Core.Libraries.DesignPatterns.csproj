@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>DfE.Core.Libraries.DesignPatterns</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DfE.Core.Libraries.DesignPatterns.UnitTests" />
+  </ItemGroup>
+  
+</Project>

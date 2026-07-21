@@ -4,9 +4,13 @@
     <File Path="Directory.Packages.props" />
     <Project Path="src/DfE.Core.Libraries.CleanArchitecture/DfE.Core.Libraries.CleanArchitecture.csproj" />
     <Project Path="src/DfE.Core.Libraries.CrossCutting/DfE.Core.Libraries.CrossCutting.csproj" />
+    <Project Path="src/DfE.Core.Libraries.DesignPatterns/DfE.Core.Libraries.DesignPatterns.csproj" Id="44d60732-c1f7-4298-928f-1fd3a850274c" />
     <Project Path="src/DfE.Core.Libraries.IntegrationTests.Database.Abstractions/DfE.Core.Libraries.IntegrationTests.Database.Abstractions.csproj" Id="470ccc92-f05b-41e0-a1f1-ffde014dd732" />
     <Project Path="src/DfE.Core.Libraries.IntegrationTests.Database.Postgres/DfE.Core.Libraries.IntegrationTests.Database.Postgres.csproj" Id="49383997-cd65-454e-896d-e0a57ec0ae78" />
     <Project Path="src/DfE.Core.Libraries.IntegrationTests/DfE.Core.Libraries.IntegrationTests.csproj" Id="2fdacce5-8e33-4ba6-b0e9-413f12be05a8" />
     <Project Path="src/DfE.Core.Libraries.Testing/DfE.Core.Libraries.Testing.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DfE.Core.Libraries.DesignPatterns.UnitTests/DfE.Core.Libraries.DesignPatterns.UnitTests.csproj" />
   </Folder>
 </Solution>
