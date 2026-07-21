@@ -4,7 +4,6 @@ public sealed class ContainerOptions
 {
 
     public string Registry { get; set; } = string.Empty;
-
     public string Owner { get; set; } = string.Empty;
 
 #nullable disable
@@ -43,9 +42,8 @@ public sealed class ContainerOptions
             return imageReference;
         }
     }
-
+    public string HostName { get; set; } = "localhost";
     public int? PublicPort { get; set; } = null;
     public IEnumerable<StartupArgument>? StartupArguments { get; set; } = [];
     public IEnumerable<ContainerResourceMapping>? CopyResourcesIntoContainerBeforeInit { get; set; } = [];
-
 }

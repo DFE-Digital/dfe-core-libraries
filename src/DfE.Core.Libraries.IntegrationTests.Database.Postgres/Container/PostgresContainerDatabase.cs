@@ -10,6 +10,7 @@ internal sealed class PostgresContainerDatabase : IDatabase
     public const int PostgresPort = 5432;
 
     private readonly Lazy<IContainer> _container;
+    private readonly ContainerOptions _containerOptions;
     private readonly PostgresDatabaseOptions _databaseOptions;
     private readonly SemaphoreSlim _startLock = new(1, 1);
     private bool _started;
@@ -25,6 +26,7 @@ internal sealed class PostgresContainerDatabase : IDatabase
 
         // ContainerOptions
         ArgumentNullException.ThrowIfNull(containerOptions);
+        _containerOptions = containerOptions;
 
         ArgumentNullException.ThrowIfNull(containerFactory);
         _container = new Lazy<IContainer>(containerFactory.Create);
@@ -73,7 +75,7 @@ internal sealed class PostgresContainerDatabase : IDatabase
             IContainer container = _container.Value;
 
             _connectionString =
-                $"Host={container.Hostname};Port={container.GetMappedPublicPort(PostgresPort)};Database={_databaseOptions.Database};Username={_databaseOptions.Username};Password={_databaseOptions.Password};";
+                $"Host={_containerOptions.HostName};Port={container.GetMappedPublicPort(PostgresPort)};Database={_databaseOptions.Database};Username={_databaseOptions.Username};Password={_databaseOptions.Password};";
 
             _started = true;
         }
