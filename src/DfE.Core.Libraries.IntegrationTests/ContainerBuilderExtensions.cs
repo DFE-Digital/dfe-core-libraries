@@ -11,8 +11,8 @@ public static class ContainerBuilderExtensions
         TContainer,
         TConfiguration>(
         this TBuilder builder,
-        ContainerOptions options,
-        ushort containerPort)
+        ushort containerPort,
+        int? exposedPort = null)
     where TContainer : IContainer
     where TConfiguration : IContainerConfiguration
     where TBuilder : ContainerBuilder<
@@ -22,9 +22,9 @@ public static class ContainerBuilderExtensions
     {
         builder = builder.WithExposedPort(containerPort);
 
-        return options.PublicPort.HasValue
+        return exposedPort.HasValue
             ? builder.WithPortBinding(
-                options.PublicPort.Value,
+                exposedPort.Value,
                 containerPort)
 
             : builder.WithPortBinding(
@@ -38,7 +38,7 @@ public static class ContainerBuilderExtensions
         TContainer,
         TConfiguration>(
         this TBuilder builder,
-        ContainerOptions options)
+        IEnumerable<StartupArgument>? args)
     where TContainer : IContainer
     where TConfiguration : IContainerConfiguration
     where TBuilder : ContainerBuilder<
@@ -46,7 +46,12 @@ public static class ContainerBuilderExtensions
             TContainer,
             TConfiguration>
     {
-        string?[] args = options.StartupArguments
+        if (args == null || !args.Any())
+        {
+            return builder;
+        }
+
+        string?[] flattenedArgs = args?
             .SelectMany(
                 kv => kv.Value.SelectMany(
                     value => new[]
@@ -54,9 +59,9 @@ public static class ContainerBuilderExtensions
                     kv.Key,
                     value.Trim()
                     }))
-            .ToArray();
+            .ToArray() ?? [];
 
-        return builder.WithCommand(args);
+        return builder.WithCommand(flattenedArgs);
     }
 
     public static TBuilder WithMountedResources<
@@ -64,7 +69,7 @@ public static class ContainerBuilderExtensions
         TContainer,
         TConfiguration>(
         this TBuilder builder,
-        IEnumerable<ContainerResourceMapping> resources)
+        IEnumerable<ContainerResourceMapping>? resources)
     where TContainer : IContainer
     where TConfiguration : IContainerConfiguration
     where TBuilder : ContainerBuilder<
@@ -72,7 +77,7 @@ public static class ContainerBuilderExtensions
         TContainer,
         TConfiguration>
     {
-        foreach (ContainerResourceMapping resource in resources)
+        foreach (ContainerResourceMapping resource in resources ?? [])
         {
             builder = builder.WithResourceMapping(
                 source: resource.Source,

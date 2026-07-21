@@ -23,10 +23,12 @@ internal sealed class PostgresBuilderContainerFactory : IContainerFactory
                 .WithDatabase(_dbOptions.Database)
                 .WithUsername(_dbOptions.Username)
                 .WithPassword(_dbOptions.Password)
-                .WithExposedPorts<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(_containerOptions, PostgreSqlBuilder.PostgreSqlPort)
-                .WithStartupCommands<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(_containerOptions)
+                .WithExposedPorts<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(
+                    containerPort: PostgreSqlBuilder.PostgreSqlPort,
+                    exposedPort: _containerOptions.PublicPort)
+                .WithStartupCommands<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(_containerOptions.StartupArguments)
                 // Add files that need to be copied into the container before it starts e.g. .sql files to be applied at startup
-                .WithMountedResources<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(_containerOptions.CopyResourcesIntoContainerBeforeInit ?? [])
+                .WithMountedResources<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(_containerOptions.CopyResourcesIntoContainerBeforeInit)
                 // forces fresh container state - no mounted volume reuse
                 .WithCleanUp(true);
 
