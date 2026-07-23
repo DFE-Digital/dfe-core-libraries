@@ -5,7 +5,7 @@ namespace DfE.Core.Libraries.DesignPatterns.ChainOfResponsibility.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddChainedHandlers<TRequest>(
+    public static IServiceCollection ChainEvaluationHandlers<TRequest>(
         this IServiceCollection services)
     {
         services.AddScoped<IEvaluator<TRequest>>(sp =>
