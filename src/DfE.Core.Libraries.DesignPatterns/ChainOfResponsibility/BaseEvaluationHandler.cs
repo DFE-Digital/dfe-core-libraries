@@ -1,11 +1,10 @@
 ﻿namespace DfE.Core.Libraries.DesignPatterns.ChainOfResponsibility;
 
-
 public abstract class BaseEvaluationHandler<TRequest>
 {
     private BaseEvaluationHandler<TRequest>? _next;
 
-    public BaseEvaluationHandler<TRequest> ChainNext(BaseEvaluationHandler<TRequest> handler)
+    public BaseEvaluationHandler<TRequest> SetNext(BaseEvaluationHandler<TRequest> handler)
     {
         _next = handler ?? throw new ArgumentNullException(nameof(handler));
         return this;
