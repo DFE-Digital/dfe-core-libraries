@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace DfE.Core.Libraries.DesignPatterns.ChainOfResponsibility;
+namespace DfE.Core.Libraries.DesignPatterns.ChainOfResponsibility.Options;
 
 public sealed class EvaluationOptions
 {

@@ -1,6 +1,6 @@
-﻿namespace DfE.Core.Libraries.DesignPatterns.ChainOfResponsibility;
+﻿namespace DfE.Core.Libraries.DesignPatterns.ChainOfResponsibility.ExecutionStrategy;
 
-public sealed class ChainOfResponsibilityStrategy<TIn> : IExecutionStrategy<TIn, IChainOfResponsibilityEvaluationHandler<TIn>>
+public sealed class ChainOfResponsibilityExecutionStrategy<TIn> : IExecutionStrategy<TIn, IChainOfResponsibilityEvaluationHandler<TIn>>
 {
     public async ValueTask ExecuteAsync(
         TIn input,

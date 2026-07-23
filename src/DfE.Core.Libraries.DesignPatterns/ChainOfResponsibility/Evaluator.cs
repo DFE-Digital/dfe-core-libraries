@@ -1,4 +1,9 @@
-﻿namespace DfE.Core.Libraries.DesignPatterns.ChainOfResponsibility;
+﻿using DfE.Core.Libraries.DesignPatterns.ChainOfResponsibility.ExecutionStrategy;
+using DfE.Core.Libraries.DesignPatterns.ChainOfResponsibility.Options;
+
+namespace DfE.Core.Libraries.DesignPatterns.ChainOfResponsibility;
+
+// NOTE TODO Separate evaluators for different execution modes ChainOfResponsibilityEvaluator - replaces the strategy
 
 public sealed class Evaluator<TRequest, THandler> : IEvaluator<TRequest> where THandler : IEvaluationHandler<TRequest>
 {
