@@ -5,32 +5,19 @@ namespace DfE.Core.Libraries.DesignPatterns.ChainOfResponsibility.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddChainedHandlers<TIn>(
-        this IServiceCollection services,
-        Action<IChainedHandlerBuilder<TIn>> configure)
+    public static IServiceCollection AddChainedHandlers<TRequest>(
+        this IServiceCollection services)
     {
-        ChainedHandlerBuilder<TIn> builder = new();
-
-        configure(builder);
-
-        foreach (HandlerRegistration registration in builder.Registrations)
+        services.AddScoped<IEvaluator<TRequest>>(sp =>
         {
-            services.Add(
-                new ServiceDescriptor(
-                    typeof(BaseEvaluationHandler<TIn>),
-                    registration.HandlerType,
-                    registration.Lifetime));
-        }
-
-        services.AddScoped<IEvaluator<TIn>>((sp) =>
-        {
-            List<BaseEvaluationHandler<TIn>> handlers =
-                [.. sp.GetServices<BaseEvaluationHandler<TIn>>()];
+            // Resolve registered handlers through DI order
+            List<BaseEvaluationHandler<TRequest>> handlers =
+                [.. sp.GetServices<BaseEvaluationHandler<TRequest>>()];
 
             if (handlers.Count == 0)
             {
                 throw new InvalidOperationException(
-                    $"No handlers were registered for {typeof(TIn).Name}.");
+                    $"No handlers registered for '{typeof(TRequest).Name}'.");
             }
 
             for (int index = 0; index < handlers.Count - 1; index++)
@@ -38,9 +25,10 @@ public static class ServiceCollectionExtensions
                 handlers[index].SetNext(handlers[index + 1]);
             }
 
-            BaseEvaluationHandler<TIn> rootHandler = handlers[0];
+            BaseEvaluationHandler<TRequest> rootHandler = handlers[0];
 
-            return new ChainOfResponsibilityEvaluator<TIn>(rootHandler);
+            return new ChainOfResponsibilityEvaluator<TRequest>(
+                rootHandler);
         });
 
         return services;
