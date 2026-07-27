@@ -42,7 +42,7 @@ public sealed class ContainerOptions
             return imageReference;
         }
     }
-    public string HostName { get; set; } = "localhost";
+    public string? HostName { get; set; }
     public IEnumerable<PortMapping>? PortMappings { get; set; }
     public IEnumerable<StartupArgument>? StartupArguments { get; set; } = [];
     public IEnumerable<ContainerResourceMapping>? CopyResourcesIntoContainerBeforeInit { get; set; } = [];
