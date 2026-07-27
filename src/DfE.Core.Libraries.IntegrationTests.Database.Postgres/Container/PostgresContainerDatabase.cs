@@ -75,7 +75,7 @@ internal sealed class PostgresContainerDatabase : IDatabase
             IContainer container = _container.Value;
 
             _connectionString =
-                $"Host={_containerOptions.HostName};Port={container.GetMappedPublicPort(PostgresPort)};Database={_databaseOptions.Database};Username={_databaseOptions.Username};Password={_databaseOptions.Password};";
+                $"Host={container.Hostname};Port={container.GetMappedPublicPort(PostgresPort)};Database={_databaseOptions.Database};Username={_databaseOptions.Username};Password={_databaseOptions.Password};";
 
             _started = true;
         }
