@@ -74,8 +74,12 @@ internal sealed class PostgresContainerDatabase : IDatabase
 
             IContainer container = _container.Value;
 
+            string hostName = string.IsNullOrWhiteSpace(_containerOptions.HostName) ?
+                container.Hostname :
+                    _containerOptions.HostName;
+
             _connectionString =
-                $"Host={_containerOptions.HostName};Port={container.GetMappedPublicPort(PostgresPort)};Database={_databaseOptions.Database};Username={_databaseOptions.Username};Password={_databaseOptions.Password};";
+                $"Host={hostName};Port={container.GetMappedPublicPort(PostgresPort)};Database={_databaseOptions.Database};Username={_databaseOptions.Username};Password={_databaseOptions.Password};";
 
             _started = true;
         }
