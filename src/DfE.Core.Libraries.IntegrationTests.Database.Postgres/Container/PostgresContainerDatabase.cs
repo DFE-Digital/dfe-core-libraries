@@ -10,25 +10,23 @@ internal sealed class PostgresContainerDatabase : IDatabase
     public const int PostgresPort = 5432;
 
     private readonly Lazy<IContainer> _container;
+    private DatabaseEndpoint? _endpoint;
     private readonly ContainerOptions _containerOptions;
     private readonly PostgresDatabaseOptions _databaseOptions;
     private readonly SemaphoreSlim _startLock = new(1, 1);
     private bool _started;
-    private string? _connectionString;
 
     public PostgresContainerDatabase(
         ContainerOptions containerOptions,
         PostgresDatabaseOptions databaseOptions,
         IContainerFactory containerFactory)
     {
-        // DatabaseOptions
-        _databaseOptions = databaseOptions ?? throw new ArgumentNullException(nameof(databaseOptions));
-
-        // ContainerOptions
         ArgumentNullException.ThrowIfNull(containerOptions);
-        _containerOptions = containerOptions;
-
         ArgumentNullException.ThrowIfNull(containerFactory);
+        ArgumentNullException.ThrowIfNull(databaseOptions);
+
+        _containerOptions = containerOptions;
+        _databaseOptions = databaseOptions;
         _container = new Lazy<IContainer>(containerFactory.Create);
     }
 
@@ -40,18 +38,10 @@ internal sealed class PostgresContainerDatabase : IDatabase
         }
     }
 
-
-    public string ConnectionString
+    public DatabaseEndpoint GetDatabaseEndpoint()
     {
-        get
-        {
-            if (_connectionString == null)
-            {
-                throw new InvalidOperationException("Database not started");
-            }
-
-            return _connectionString;
-        }
+        EnsureDatabaseStarted();
+        return _endpoint!;
     }
 
     public async Task StartAsync(CancellationToken ctx = default)
@@ -74,12 +64,8 @@ internal sealed class PostgresContainerDatabase : IDatabase
 
             IContainer container = _container.Value;
 
-            string hostName = string.IsNullOrWhiteSpace(_containerOptions.HostName) ?
-                container.Hostname :
-                    _containerOptions.HostName;
-
-            _connectionString =
-                $"Host={hostName};Port={container.GetMappedPublicPort(PostgresPort)};Database={_databaseOptions.Database};Username={_databaseOptions.Username};Password={_databaseOptions.Password};";
+            _endpoint = new(
+                host: container.Hostname, port: GetPublicContainerPort(container));
 
             _started = true;
         }
@@ -91,10 +77,33 @@ internal sealed class PostgresContainerDatabase : IDatabase
 
     public async Task ExecuteAsync(string sql, CancellationToken ctx = default)
     {
-        await using NpgsqlConnection connection = new(ConnectionString);
+        string connectionString = BuildConnectionString();
+        await using NpgsqlConnection connection = new(connectionString);
         await connection.OpenAsync(ctx);
 
         await using NpgsqlCommand command = new(sql, connection);
         await command.ExecuteNonQueryAsync(ctx);
+    }
+
+    private string BuildConnectionString()
+    {
+        EnsureDatabaseStarted();
+
+        return
+            $"Host={_endpoint!.Host};" +
+            $"Port={_endpoint.Port};" +
+            $"Database={_databaseOptions.Database};" +
+            $"Username={_databaseOptions.Username};" +
+            $"Password={_databaseOptions.Password};";
+    }
+
+    private static ushort GetPublicContainerPort(IContainer container) => container.GetMappedPublicPort(PostgresPort);
+
+    private void EnsureDatabaseStarted()
+    {
+        if (!_started || _endpoint is null)
+        {
+            throw new InvalidOperationException("Database has not been started");
+        }
     }
 }

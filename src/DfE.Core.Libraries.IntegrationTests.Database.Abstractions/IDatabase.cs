@@ -2,7 +2,7 @@
 
 public interface IDatabase : IAsyncDisposable
 {
-    string ConnectionString { get; }
+    DatabaseEndpoint GetDatabaseEndpoint();
     Task StartAsync(CancellationToken ctx = default);
     Task ExecuteAsync(string sql, CancellationToken ctx = default);
 }
