@@ -61,7 +61,7 @@ internal sealed class PostgresBuilderContainerFactory : IContainerFactory
             builder = builder.WithNetworkAliases(_containerOptions.HostName);
         }
 
-        if(_containerRuntimeOptions.Network is not null)
+        if (_containerRuntimeOptions.Network is not null)
         {
             builder = builder.WithNetwork(_containerRuntimeOptions.Network);
         }
