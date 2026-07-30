@@ -8,16 +8,20 @@ internal sealed class PostgresBuilderContainerFactory : IContainerFactory
 {
     private readonly PostgresDatabaseOptions _dbOptions;
     private readonly ContainerOptions _containerOptions;
+    private readonly ContainerRuntimeOptions _containerRuntimeOptions;
 
-    public PostgresBuilderContainerFactory(PostgresDatabaseOptions dbOptions, ContainerOptions containerOptions)
+    public PostgresBuilderContainerFactory(
+        PostgresDatabaseOptions dbOptions,
+        ContainerOptions containerOptions,
+        ContainerRuntimeOptions containerRuntimeOptions)
     {
         _dbOptions = dbOptions;
         _containerOptions = containerOptions;
+        _containerRuntimeOptions = containerRuntimeOptions;
     }
 
     public IContainer Create()
     {
-
         IEnumerable<PortMapping> portMappings = _containerOptions.PortMappings ?? [];
 
         if (!portMappings.Any(t => t.ContainerPort == PostgreSqlBuilder.PostgreSqlPort))
@@ -33,20 +37,34 @@ internal sealed class PostgresBuilderContainerFactory : IContainerFactory
             ];
         }
 
-
         // Important builder is immuteable so each configuration will create a new instance with configuration applied
         PostgreSqlBuilder builder =
             new PostgreSqlBuilder(_containerOptions.Image)
                 .WithDatabase(_dbOptions.Database)
                 .WithUsername(_dbOptions.Username)
                 .WithPassword(_dbOptions.Password)
-                .WithExtraHost("host.docker.internal", "host-gateway") //TEMPORARY CONTAINER-CONTAINER network
                 .WithExposedPorts<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(portMappings)
                 .WithStartupCommands<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(_containerOptions.StartupArguments)
                 // Add files that need to be copied into the container before it starts e.g. .sql files to be applied at startup
                 .WithMountedResources<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(_containerOptions.CopyResourcesIntoContainerBeforeInit)
                 // forces fresh container state - no mounted volume reuse
                 .WithCleanUp(true);
+
+        if (!string.IsNullOrWhiteSpace(_containerOptions.ContainerName))
+        {
+            builder = builder.WithName(_containerOptions.ContainerName);
+        }
+
+        // container-container networking
+        if (!string.IsNullOrEmpty(_containerOptions.HostName))
+        {
+            builder = builder.WithNetworkAliases(_containerOptions.HostName);
+        }
+
+        if(_containerRuntimeOptions.Network is not null)
+        {
+            builder = builder.WithNetwork(_containerRuntimeOptions.Network);
+        }
 
         return builder.Build();
     }
