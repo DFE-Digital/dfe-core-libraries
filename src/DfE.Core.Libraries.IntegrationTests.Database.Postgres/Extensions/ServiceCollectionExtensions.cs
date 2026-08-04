@@ -1,10 +1,9 @@
-﻿using System.Text.RegularExpressions;
-using DfE.Core.Libraries.IntegrationTests.Abstractions;
+﻿using DfE.Core.Libraries.IntegrationTests.Abstractions;
 using DfE.Core.Libraries.IntegrationTests.Database.Abstractions;
-using DfE.Core.Libraries.IntegrationTests.Database.Postgres;
 using DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
 namespace DfE.Core.Libraries.IntegrationTests.Database.Postgres.Extensions;
@@ -40,6 +39,8 @@ public static class ServiceCollectionExtensions
             .Validate(opt => !string.IsNullOrWhiteSpace(opt.Password), failureMessage: "Password should not be null or empty")
             .ValidateOnStart()
             .RegisterValueFromIOptions();
+
+        services.TryAddSingleton<ContainerRuntimeOptions>();
 
         return services;
     }

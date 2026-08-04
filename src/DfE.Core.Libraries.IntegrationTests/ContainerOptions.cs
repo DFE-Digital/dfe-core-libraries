@@ -1,4 +1,7 @@
-﻿namespace DfE.Core.Libraries.IntegrationTests.Abstractions;
+﻿using System.Text.Json.Serialization;
+using DotNet.Testcontainers.Networks;
+
+namespace DfE.Core.Libraries.IntegrationTests.Abstractions;
 
 public sealed class ContainerOptions
 {
@@ -42,6 +45,7 @@ public sealed class ContainerOptions
             return imageReference;
         }
     }
+    public string? ContainerName { get; set; }
     public string? HostName { get; set; }
     public IEnumerable<PortMapping>? PortMappings { get; set; }
     public IEnumerable<StartupArgument>? StartupArguments { get; set; } = [];

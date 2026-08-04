@@ -8,16 +8,20 @@ internal sealed class PostgresBuilderContainerFactory : IContainerFactory
 {
     private readonly PostgresDatabaseOptions _dbOptions;
     private readonly ContainerOptions _containerOptions;
+    private readonly ContainerRuntimeOptions _containerRuntimeOptions;
 
-    public PostgresBuilderContainerFactory(PostgresDatabaseOptions dbOptions, ContainerOptions containerOptions)
+    public PostgresBuilderContainerFactory(
+        PostgresDatabaseOptions dbOptions,
+        ContainerOptions containerOptions,
+        ContainerRuntimeOptions containerRuntimeOptions)
     {
         _dbOptions = dbOptions;
         _containerOptions = containerOptions;
+        _containerRuntimeOptions = containerRuntimeOptions;
     }
 
     public IContainer Create()
     {
-
         IEnumerable<PortMapping> portMappings = _containerOptions.PortMappings ?? [];
 
         if (!portMappings.Any(t => t.ContainerPort == PostgreSqlBuilder.PostgreSqlPort))
@@ -33,7 +37,6 @@ internal sealed class PostgresBuilderContainerFactory : IContainerFactory
             ];
         }
 
-
         // Important builder is immuteable so each configuration will create a new instance with configuration applied
         PostgreSqlBuilder builder =
             new PostgreSqlBuilder(_containerOptions.Image)
@@ -46,6 +49,22 @@ internal sealed class PostgresBuilderContainerFactory : IContainerFactory
                 .WithMountedResources<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(_containerOptions.CopyResourcesIntoContainerBeforeInit)
                 // forces fresh container state - no mounted volume reuse
                 .WithCleanUp(true);
+
+        if (!string.IsNullOrWhiteSpace(_containerOptions.ContainerName))
+        {
+            builder = builder.WithName(_containerOptions.ContainerName);
+        }
+
+        // container-container networking
+        if (!string.IsNullOrEmpty(_containerOptions.HostName))
+        {
+            builder = builder.WithNetworkAliases(_containerOptions.HostName);
+        }
+
+        if (_containerRuntimeOptions.Network is not null)
+        {
+            builder = builder.WithNetwork(_containerRuntimeOptions.Network);
+        }
 
         return builder.Build();
     }
