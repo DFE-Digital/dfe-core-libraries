@@ -17,8 +17,8 @@ public static class ServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(configuration);
 
         services.AddPostgresOptions(configuration);
-        services.AddSingleton<IDatabaseFactory, PostgresDatabaseFactory>();
-        services.AddSingleton<IContainerFactory, PostgresContainerFactory>();
+        services.AddScoped<IDatabaseFactory, PostgresDatabaseFactory>();
+        services.AddScoped<IContainerFactory, PostgresContainerFactory>();
         return services;
     }
 
