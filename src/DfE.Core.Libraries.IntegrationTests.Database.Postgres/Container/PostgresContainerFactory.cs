@@ -1,26 +1,28 @@
-﻿using DfE.Core.Libraries.IntegrationTests.Abstractions;
+﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers;
+using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Extensions;
+using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options;
 using DotNet.Testcontainers.Containers;
 using Testcontainers.PostgreSql;
 
 namespace DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container;
 
-internal sealed class PostgresBuilderContainerFactory : IContainerFactory
+internal sealed class PostgresContainerFactory : IContainerFactory
 {
     private readonly PostgresDatabaseOptions _dbOptions;
     private readonly ContainerOptions _containerOptions;
-    private readonly ContainerRuntimeOptions _containerRuntimeOptions;
+    private readonly IContainerRegistry _containerRegistry;
 
-    public PostgresBuilderContainerFactory(
+    public PostgresContainerFactory(
         PostgresDatabaseOptions dbOptions,
         ContainerOptions containerOptions,
-        ContainerRuntimeOptions containerRuntimeOptions)
+        IContainerRegistry containerRegistry)
     {
         _dbOptions = dbOptions;
         _containerOptions = containerOptions;
-        _containerRuntimeOptions = containerRuntimeOptions;
+        _containerRegistry = containerRegistry;
     }
 
-    public IContainer Create()
+    public async Task<IContainer> Create()
     {
         IEnumerable<PortMapping> portMappings = _containerOptions.PortMappings ?? [];
 
@@ -50,20 +52,14 @@ internal sealed class PostgresBuilderContainerFactory : IContainerFactory
                 // forces fresh container state - no mounted volume reuse
                 .WithCleanUp(true);
 
+        if (_containerOptions.Networks != null && _containerOptions.Networks.Any())
+        {
+            builder = await builder.WithNetworksAsync<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(_containerOptions.Networks, _containerRegistry);
+        }
+
         if (!string.IsNullOrWhiteSpace(_containerOptions.ContainerName))
         {
             builder = builder.WithName(_containerOptions.ContainerName);
-        }
-
-        // container-container networking
-        if (!string.IsNullOrEmpty(_containerOptions.HostName))
-        {
-            builder = builder.WithNetworkAliases(_containerOptions.HostName);
-        }
-
-        if (_containerRuntimeOptions.Network is not null)
-        {
-            builder = builder.WithNetwork(_containerRuntimeOptions.Network);
         }
 
         return builder.Build();
