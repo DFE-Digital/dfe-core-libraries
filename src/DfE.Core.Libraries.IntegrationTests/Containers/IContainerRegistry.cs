@@ -5,7 +5,7 @@ namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers;
 
 public interface IContainerRegistry
 {
-    Task<INetwork> GetOrCreateNetworkAsync(string name);
+    Task<INetwork> GetOrCreateNetworkAsync(string key);
 
     Task RegisterContainerAsync(
         string name,

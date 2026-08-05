@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using DotNet.Testcontainers.Networks;
@@ -7,24 +8,29 @@ namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers;
 
 public sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
 {
-    private readonly ConcurrentDictionary<string, Lazy<Task<INetwork>>> _networks = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, Lazy<Task<NetworkRegistration>>> _networks =
+        new(StringComparer.OrdinalIgnoreCase);
 
-    private readonly ConcurrentDictionary<string, IContainer> _containers = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, IContainer> _containers =
+        new(StringComparer.OrdinalIgnoreCase);
 
     private bool _disposed;
 
-    public async Task<INetwork> GetOrCreateNetworkAsync(string name)
+    public async Task<INetwork> GetOrCreateNetworkAsync(string key)
     {
-        if (string.IsNullOrWhiteSpace(name))
+        if (string.IsNullOrWhiteSpace(key))
         {
-            throw new ArgumentException("Network name cannot be null or whitespace.", nameof(name));
+            throw new ArgumentException(
+                "Network key cannot be null or whitespace.",
+                nameof(key));
         }
 
-        Lazy<Task<INetwork>> lazyNetwork = _networks.GetOrAdd(
-            name,
-            CreateNetwork);
+        Lazy<Task<NetworkRegistration>> registration =
+            _networks.GetOrAdd(
+                key,
+                CreateNetwork);
 
-        return await lazyNetwork.Value;
+        return (await registration.Value).Network;
     }
 
     public Task RegisterContainerAsync(
@@ -33,12 +39,14 @@ public sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new ArgumentException("Container name cannot be null or whitespace.", nameof(name));
+            throw new ArgumentException(
+                "Container name cannot be null or whitespace.",
+                nameof(name));
         }
 
-        if (container is null)
+        if (container == null)
         {
-            throw new ArgumentNullException(nameof(container));
+            throw new ArgumentException("Container cannot be null");
         }
 
         if (!_containers.TryAdd(name, container))
@@ -56,25 +64,32 @@ public sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new ArgumentException("Container name cannot be null or whitespace.", nameof(name));
+            throw new ArgumentException(
+                "Container name cannot be null or whitespace.",
+                nameof(name));
         }
 
         return _containers.TryGetValue(name, out container);
     }
 
-
-    private static Lazy<Task<INetwork>> CreateNetwork(string networkName)
+    private static Lazy<Task<NetworkRegistration>> CreateNetwork(
+        string key)
     {
-        return new Lazy<Task<INetwork>>(
+        return new Lazy<Task<NetworkRegistration>>(
             async () =>
             {
+                string networkName = CreateDockerNetworkName(key);
+
                 INetwork network = new NetworkBuilder()
                     .WithName(networkName)
                     .Build();
 
                 await network.CreateAsync();
 
-                return network;
+                return new NetworkRegistration(
+                    key,
+                    networkName,
+                    network);
             },
             LazyThreadSafetyMode.ExecutionAndPublication);
     }
@@ -90,9 +105,6 @@ public sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
 
         List<Exception> exceptions = [];
 
-        //
-        // Dispose containers first.
-        //
         foreach (IContainer container in _containers.Values.Reverse())
         {
             try
@@ -105,17 +117,16 @@ public sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
             }
         }
 
-        //
-        // Dispose networks after containers.
-        //
-        foreach (Lazy<Task<INetwork>> lazyNetwork in _networks.Values.Reverse())
+        foreach (Lazy<Task<NetworkRegistration>> registration in _networks.Values.Reverse())
         {
             try
             {
-                if (lazyNetwork.IsValueCreated)
+                if (registration.IsValueCreated)
                 {
-                    INetwork network = await lazyNetwork.Value;
-                    await network.DisposeAsync();
+                    NetworkRegistration networkRegistration =
+                        await registration.Value;
+
+                    await networkRegistration.Network.DisposeAsync();
                 }
             }
             catch (Exception ex)
@@ -133,5 +144,32 @@ public sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
                 "One or more errors occurred while disposing container resources.",
                 exceptions);
         }
+    }
+    private sealed record NetworkRegistration
+    {
+        public NetworkRegistration(string Key, string DockerNetworkName, INetwork Network)
+        {
+            this.Key = Key;
+            this.DockerNetworkName = DockerNetworkName;
+            this.Network = Network;
+        }
+
+        public string Key { get; }
+        public string DockerNetworkName { get; }
+        public INetwork Network { get; }
+    };
+
+    private static string CreateDockerNetworkName(string key)
+    {
+        string sanitizedKey = Regex.Replace(
+            key.ToLowerInvariant(),
+            "[^a-z0-9_.-]",
+            "-");
+
+        sanitizedKey = Regex.Replace(sanitizedKey, "-+", "-");
+
+        sanitizedKey = sanitizedKey.Trim('-');
+
+        return $"{sanitizedKey}-{Guid.NewGuid():N}";
     }
 }

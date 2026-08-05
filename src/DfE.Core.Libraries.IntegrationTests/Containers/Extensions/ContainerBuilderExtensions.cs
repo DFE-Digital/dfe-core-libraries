@@ -118,7 +118,7 @@ public static class ContainerBuilderExtensions
     TContainer,
     TConfiguration>(
         this TBuilder builder,
-        IEnumerable<ContainerNetwork>? networks,
+        IEnumerable<ContainerNetworkAttachment>? networks,
         IContainerRegistry registry)
             where TContainer : IContainer
             where TConfiguration : IContainerConfiguration
@@ -132,11 +132,12 @@ public static class ContainerBuilderExtensions
             return builder;
         }
 
-        foreach (ContainerNetwork networkOption in networks)
+        foreach (ContainerNetworkAttachment networkOption in networks)
         {
+
             INetwork network =
                 await registry.GetOrCreateNetworkAsync(
-                    networkOption.Name);
+                    $"{networkOption.Key}");
 
             builder = builder.WithNetwork(network);
 

@@ -1,11 +1,11 @@
 ﻿namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options;
 
-public sealed class ContainerNetworkAttachmentOptions
+public sealed class ContainerNetworkOptions
 {
-    public IEnumerable<NetworkAttachment> Networks { get; set; } = [];
+    public IEnumerable<ContainerNetwork> Networks { get; set; } = [];
 }
 
-public sealed class NetworkAttachment
+public sealed class ContainerNetwork
 {
     public string? Name { get; set; }
     public IList<string> Aliases { get; set; } = [];
