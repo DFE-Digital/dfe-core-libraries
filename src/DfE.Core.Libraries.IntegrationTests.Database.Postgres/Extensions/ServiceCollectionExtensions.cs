@@ -40,7 +40,7 @@ public static class ServiceCollectionExtensions
             .ValidateOnStart()
             .RegisterValueFromIOptions();
 
-        services.AddScoped<IContainerRegistry, ContainerRegistry>();
+        services.AddSingleton<IContainerRegistry, ContainerRegistry>();
 
         return services;
     }
