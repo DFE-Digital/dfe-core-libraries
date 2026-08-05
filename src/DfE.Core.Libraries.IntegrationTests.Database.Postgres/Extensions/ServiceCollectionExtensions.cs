@@ -1,9 +1,9 @@
-﻿using DfE.Core.Libraries.IntegrationTests.Abstractions;
+﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers;
+using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options;
 using DfE.Core.Libraries.IntegrationTests.Database.Abstractions;
 using DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
 namespace DfE.Core.Libraries.IntegrationTests.Database.Postgres.Extensions;
@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions
 
         services.AddPostgresOptions(configuration);
         services.AddSingleton<IDatabaseFactory, PostgresDatabaseFactory>();
-        services.AddSingleton<IContainerFactory, PostgresBuilderContainerFactory>();
+        services.AddSingleton<IContainerFactory, PostgresContainerFactory>();
         return services;
     }
 
@@ -40,7 +40,7 @@ public static class ServiceCollectionExtensions
             .ValidateOnStart()
             .RegisterValueFromIOptions();
 
-        services.TryAddSingleton<ContainerRuntimeOptions>();
+        services.AddScoped<IContainerRegistry, ContainerRegistry>();
 
         return services;
     }

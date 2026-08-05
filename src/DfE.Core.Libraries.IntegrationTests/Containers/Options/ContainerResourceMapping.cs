@@ -1,4 +1,4 @@
-﻿namespace DfE.Core.Libraries.IntegrationTests.Abstractions;
+﻿namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options;
 
 public sealed class ContainerResourceMapping
 {

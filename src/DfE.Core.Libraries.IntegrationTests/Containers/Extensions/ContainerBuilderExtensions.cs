@@ -1,8 +1,10 @@
-﻿using DotNet.Testcontainers.Builders;
+﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options;
+using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
+using DotNet.Testcontainers.Networks;
 
-namespace DfE.Core.Libraries.IntegrationTests.Abstractions;
+namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Extensions;
 
 public static class ContainerBuilderExtensions
 {
@@ -12,12 +14,12 @@ public static class ContainerBuilderExtensions
         TConfiguration>(
         this TBuilder builder,
         IEnumerable<PortMapping> portMappings)
-    where TContainer : IContainer
-    where TConfiguration : IContainerConfiguration
-    where TBuilder : ContainerBuilder<
-            TBuilder,
-            TContainer,
-            TConfiguration>
+            where TContainer : IContainer
+            where TConfiguration : IContainerConfiguration
+            where TBuilder : ContainerBuilder<
+                    TBuilder,
+                    TContainer,
+                    TConfiguration>
     {
         foreach (PortMapping portMapping in portMappings)
         {
@@ -42,12 +44,12 @@ public static class ContainerBuilderExtensions
         TConfiguration>(
         this TBuilder builder,
         IEnumerable<StartupArgument>? args)
-    where TContainer : IContainer
-    where TConfiguration : IContainerConfiguration
-    where TBuilder : ContainerBuilder<
-            TBuilder,
-            TContainer,
-            TConfiguration>
+            where TContainer : IContainer
+            where TConfiguration : IContainerConfiguration
+            where TBuilder : ContainerBuilder<
+                    TBuilder,
+                    TContainer,
+                    TConfiguration>
     {
         if (args == null || !args.Any())
         {
@@ -73,12 +75,12 @@ public static class ContainerBuilderExtensions
         TConfiguration>(
         this TBuilder builder,
         IEnumerable<ContainerResourceMapping>? resources)
-    where TContainer : IContainer
-    where TConfiguration : IContainerConfiguration
-    where TBuilder : ContainerBuilder<
-        TBuilder,
-        TContainer,
-        TConfiguration>
+            where TContainer : IContainer
+            where TConfiguration : IContainerConfiguration
+            where TBuilder : ContainerBuilder<
+                TBuilder,
+                TContainer,
+                TConfiguration>
     {
         foreach (ContainerResourceMapping resource in resources ?? [])
         {
@@ -109,5 +111,41 @@ public static class ContainerBuilderExtensions
 
             return mode;
         }
+    }
+
+    public static async Task<TBuilder> WithNetworksAsync<
+    TBuilder,
+    TContainer,
+    TConfiguration>(
+        this TBuilder builder,
+        IEnumerable<ContainerNetwork>? networks,
+        IContainerRegistry registry)
+            where TContainer : IContainer
+            where TConfiguration : IContainerConfiguration
+            where TBuilder : ContainerBuilder<
+                TBuilder,
+                TContainer,
+                TConfiguration>
+    {
+        if (networks == null)
+        {
+            return builder;
+        }
+
+        foreach (ContainerNetwork networkOption in networks)
+        {
+            INetwork network =
+                await registry.GetOrCreateNetworkAsync(
+                    networkOption.Name);
+
+            builder = builder.WithNetwork(network);
+
+            foreach (string alias in networkOption.Aliases)
+            {
+                builder = builder.WithNetworkAliases(alias);
+            }
+        }
+
+        return builder;
     }
 }
