@@ -62,12 +62,6 @@ internal sealed class PostgresContainerFactory : IContainerFactory
             builder = builder.WithName(_containerOptions.ContainerName);
         }
 
-        // container-container networking
-        if (!string.IsNullOrEmpty(_containerOptions.HostName))
-        {
-            builder = builder.WithNetworkAliases(_containerOptions.HostName);
-        }
-
         return builder.Build();
     }
 }

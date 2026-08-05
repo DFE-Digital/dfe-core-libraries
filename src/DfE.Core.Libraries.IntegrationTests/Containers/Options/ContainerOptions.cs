@@ -43,7 +43,6 @@ public sealed class ContainerOptions
         }
     }
     public string? ContainerName { get; set; }
-    public string? HostName { get; set; }
     public IEnumerable<PortMapping>? PortMappings { get; set; }
     public IEnumerable<StartupArgument>? StartupArguments { get; set; } = [];
     public IEnumerable<ContainerNetwork> Networks { get; set; } = [];
