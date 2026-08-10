@@ -30,7 +30,7 @@ public static class ServiceCollectionExtensions
         // Shared ContainerRegistry activation
         services.AddContainerRegistry();
 
-        services.AddSingleton<ContainerRegistration<PostgreSqlBuilder>>(
+        services.AddSingleton<IContainerRegistration>(
             (sp) =>
             {
                 sp.GetRequiredService<IValidateOptions<PostgresContainerOptions>>()
