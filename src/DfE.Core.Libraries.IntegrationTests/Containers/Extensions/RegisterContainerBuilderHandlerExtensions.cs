@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Extensions;
 
-public static class ContainerBuilderHandlerExtensions
+public static class RegisterContainerBuilderHandlerExtensions
 {
     public static IServiceCollection AddContainerBuilderHandler<TBuilder>(
         this IServiceCollection services,

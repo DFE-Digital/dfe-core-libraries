@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 
 namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Extensions;
 
-public static class ServiceCollectionExtensions
+public static class RegisterContainerExtensions
 {
     public static IServiceCollection AddContainerRegistry(this IServiceCollection services)
     {
@@ -40,15 +40,9 @@ public static class ServiceCollectionExtensions
                     .Validate(key, options)
                     .ThrowIfFailed<ValidateOptionsResult>(key);
 
-                IReadOnlyCollection<IContainerBuilderHandler<ContainerBuilder>> handlers =
-                    sp.GetServices<ContainerBuilderHandlerRegistration<ContainerBuilder>>()
-                        .Where((builderHandlerRegistration)
-                            => builderHandlerRegistration.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
-                        .Select(x => x.Handler)
-                        .ToArray();
+                IReadOnlyCollection<IContainerBuilderHandler<ContainerBuilder>> handlers = GetHandlersFor(key, sp);
 
-                return new ContainerRegistration<ContainerBuilder>(
-                    key,
+                Func<IContainerRegistry, CancellationToken, Task<ContainerBuilderContext<ContainerBuilder>>> createBuilderContext =
                     async (registry, ct) =>
                     {
                         ContainerBuilder builder =
@@ -62,10 +56,25 @@ public static class ServiceCollectionExtensions
                         return new ContainerBuilderContext<ContainerBuilder>(
                             builder,
                             (builder) => builder.Build());
-                    },
+                    };
+
+                return new ContainerRegistration<ContainerBuilder>(
+                    key,
+                    createBuilderContext,
                     handlers);
             });
 
         return services;
+    }
+
+    private static IReadOnlyCollection<IContainerBuilderHandler<ContainerBuilder>> GetHandlersFor(string key, IServiceProvider provider)
+    {
+        IReadOnlyCollection<IContainerBuilderHandler<ContainerBuilder>> handlers =
+            provider.GetServices<ContainerBuilderHandlerRegistration<ContainerBuilder>>()
+                .Where((builderHandlerRegistration) => builderHandlerRegistration.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+                .Select(x => x.Handler)
+                .ToArray();
+
+        return handlers;
     }
 }
