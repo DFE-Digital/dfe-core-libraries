@@ -2,7 +2,6 @@
 
 public sealed class ContainerOptions
 {
-
     public string Registry { get; set; } = string.Empty;
     public string Owner { get; set; } = string.Empty;
 
@@ -43,6 +42,7 @@ public sealed class ContainerOptions
         }
     }
     public string? ContainerName { get; set; }
+    public IDictionary<string, string> EnvironmentVariables { get; set; } = new Dictionary<string, string>();
     public IEnumerable<PortMapping>? PortMappings { get; set; }
     public IEnumerable<StartupArgument>? StartupArguments { get; set; } = [];
     public IEnumerable<ContainerNetworkAttachment> Networks { get; set; } = [];

@@ -1,43 +1,37 @@
-﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options;
-using DfE.Core.Libraries.IntegrationTests.Database.Abstractions;
+﻿using DfE.Core.Libraries.IntegrationTests.Database.Abstractions;
+using DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Options;
 using DotNet.Testcontainers.Containers;
 using Npgsql;
 
-namespace DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container;
+namespace DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Provider;
 
 internal sealed class PostgresContainerDatabase : IDatabase
 {
     public const int PostgresPort = 5432;
 
-    private readonly ContainerOptions _containerOptions;
     private readonly PostgresDatabaseOptions _databaseOptions;
-    private readonly IContainerFactory _containerFactory;
-
+    private readonly Lazy<IContainer> _container;
     private readonly SemaphoreSlim _startLock = new(1, 1);
 
-    private IContainer? _container;
     private DatabaseEndpoint? _endpoint;
     private bool _started;
 
     public PostgresContainerDatabase(
-        ContainerOptions containerOptions,
         PostgresDatabaseOptions databaseOptions,
-        IContainerFactory containerFactory)
+        Lazy<IContainer> container)
     {
-        ArgumentNullException.ThrowIfNull(containerOptions);
         ArgumentNullException.ThrowIfNull(databaseOptions);
-        ArgumentNullException.ThrowIfNull(containerFactory);
+        ArgumentNullException.ThrowIfNull(container);
 
-        _containerOptions = containerOptions;
         _databaseOptions = databaseOptions;
-        _containerFactory = containerFactory;
+        _container = container;
     }
 
     public async ValueTask DisposeAsync()
     {
         if (_container is not null)
         {
-            await _container.DisposeAsync();
+            await _container.Value.DisposeAsync();
         }
 
         _startLock.Dispose();
@@ -66,13 +60,11 @@ internal sealed class PostgresContainerDatabase : IDatabase
                 return;
             }
 
-            _container ??= await _containerFactory.Create();
-
-            await _container.StartAsync(ctx);
+            await _container.Value.StartAsync(ctx);
 
             _endpoint = new DatabaseEndpoint(
-                host: _container.Hostname,
-                port: GetPublicContainerPort(_container));
+                host: _container.Value.Hostname,
+                port: GetPublicContainerPort(_container.Value));
 
             _started = true;
         }
@@ -106,7 +98,7 @@ internal sealed class PostgresContainerDatabase : IDatabase
         return
             $"Host={_endpoint!.Host};" +
             $"Port={_endpoint.Port};" +
-            $"Database={_databaseOptions.Database};" +
+            $"Database={_databaseOptions.Name};" +
             $"Username={_databaseOptions.Username};" +
             $"Password={_databaseOptions.Password};";
     }
