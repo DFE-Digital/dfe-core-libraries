@@ -8,7 +8,60 @@ namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Extensions
 
 public static class ContainerBuilderExtensions
 {
-    public static TBuilder WithExposedPorts<
+    public static TBuilder WithContainerOptions<TBuilder, TContainer, TConfiguration>(this TBuilder builder, ContainerOptions options)
+            where TContainer : IContainer
+            where TConfiguration : IContainerConfiguration
+            where TBuilder : ContainerBuilder<TBuilder, TContainer, TConfiguration>
+    {
+        builder =
+            builder
+                .WithImage(options.Image)
+                .WithExposedPorts<TBuilder, TContainer, TConfiguration>(options.PortMappings ?? [])
+                .WithStartupCommands<TBuilder, TContainer, TConfiguration>(options.StartupArguments ?? [])
+                .WithMountedResources<TBuilder, TContainer, TConfiguration>(options.CopyResourcesIntoContainerBeforeInit ?? []);
+
+        //.WithEnvironment(options.StartupArguments?.ToDictionary(arg => arg.Key, arg => arg.Value) ?? new Dictionary<string, string>())
+
+        if (!string.IsNullOrWhiteSpace(options.ContainerName))
+        {
+            builder = builder.WithName(options.ContainerName);
+        }
+
+        return builder;
+    }
+
+    public static async Task<TBuilder> WithContainerNetworksAsync<TBuilder, TContainer, TConfiguration>(
+        this TBuilder builder,
+        IEnumerable<ContainerNetworkAttachment>? networks,
+        IContainerRegistry registry)
+            where TContainer : IContainer
+            where TConfiguration : IContainerConfiguration
+            where TBuilder : ContainerBuilder<TBuilder, TContainer, TConfiguration>
+    {
+        if (networks == null)
+        {
+            return builder;
+        }
+
+        foreach (ContainerNetworkAttachment networkOption in networks)
+        {
+
+            INetwork network =
+                await registry.GetOrCreateNetworkAsync(
+                    $"{networkOption.Key}");
+
+            builder = builder.WithNetwork(network);
+
+            foreach (string alias in networkOption.Aliases)
+            {
+                builder = builder.WithNetworkAliases(alias);
+            }
+        }
+
+        return builder;
+    }
+
+    private static TBuilder WithExposedPorts<
         TBuilder,
         TContainer,
         TConfiguration>(
@@ -38,7 +91,7 @@ public static class ContainerBuilderExtensions
     }
 
 
-    public static TBuilder WithStartupCommands<
+    private static TBuilder WithStartupCommands<
         TBuilder,
         TContainer,
         TConfiguration>(
@@ -69,7 +122,7 @@ public static class ContainerBuilderExtensions
         return builder.WithCommand(flattenedArgs);
     }
 
-    public static TBuilder WithMountedResources<
+    private static TBuilder WithMountedResources<
         TBuilder,
         TContainer,
         TConfiguration>(
@@ -111,42 +164,5 @@ public static class ContainerBuilderExtensions
 
             return mode;
         }
-    }
-
-    public static async Task<TBuilder> WithNetworksAsync<
-    TBuilder,
-    TContainer,
-    TConfiguration>(
-        this TBuilder builder,
-        IEnumerable<ContainerNetworkAttachment>? networks,
-        IContainerRegistry registry)
-            where TContainer : IContainer
-            where TConfiguration : IContainerConfiguration
-            where TBuilder : ContainerBuilder<
-                TBuilder,
-                TContainer,
-                TConfiguration>
-    {
-        if (networks == null)
-        {
-            return builder;
-        }
-
-        foreach (ContainerNetworkAttachment networkOption in networks)
-        {
-
-            INetwork network =
-                await registry.GetOrCreateNetworkAsync(
-                    $"{networkOption.Key}");
-
-            builder = builder.WithNetwork(network);
-
-            foreach (string alias in networkOption.Aliases)
-            {
-                builder = builder.WithNetworkAliases(alias);
-            }
-        }
-
-        return builder;
     }
 }

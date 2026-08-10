@@ -6,23 +6,88 @@ using DotNet.Testcontainers.Networks;
 
 namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers;
 
-public sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
+internal sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
 {
-    private readonly ConcurrentDictionary<string, Lazy<Task<NetworkRegistration>>> _networks =
+    private readonly ConcurrentDictionary<string, ContainerRegistration> _registrations =
         new(StringComparer.OrdinalIgnoreCase);
 
-    private readonly ConcurrentDictionary<string, IContainer> _containers =
+    private readonly ConcurrentDictionary<string, Lazy<Task<IContainer>>> _containers =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly ConcurrentDictionary<string, Lazy<Task<NetworkRegistration>>> _networks =
         new(StringComparer.OrdinalIgnoreCase);
 
     private bool _disposed;
 
-    public async Task<INetwork> GetOrCreateNetworkAsync(string key)
+    public ContainerRegistry(IEnumerable<ContainerRegistration>? containerRegistrations)
+    {
+        containerRegistrations?
+            .ToList()
+            .ForEach((containerRegistrations)
+                => _registrations.GetOrAdd(containerRegistrations.Key, containerRegistrations));
+    }
+
+    public void Register(
+        string key,
+        Func<IContainerRegistry, CancellationToken, Task<IContainer>> create)
     {
         if (string.IsNullOrWhiteSpace(key))
         {
-            throw new ArgumentException(
-                "Network key cannot be null or whitespace.",
-                nameof(key));
+            throw new ArgumentException("Container key cannot be null or whitespace.", nameof(key));
+        }
+
+        if (!_registrations.TryAdd(
+                key,
+                new ContainerRegistration(
+                    key,
+                    create)))
+        {
+            throw new InvalidOperationException(
+                $"Container '{key}' is already registered.");
+        }
+    }
+
+    public async Task<IContainer> GetOrCreateContainerAsync(
+        string key,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("Container key cannot be null or whitespace.", nameof(key));
+        }
+
+        if (!_registrations.TryGetValue(key, out ContainerRegistration? registration))
+        {
+            throw new InvalidOperationException($"Container: {key} has not been registered.");
+        }
+
+        Lazy<Task<IContainer>> lazyContainer =
+            _containers.GetOrAdd(
+                key,
+                _ => new Lazy<Task<IContainer>>(
+                    async () =>
+                    {
+                        IContainer container =
+                            await registration.Create(
+                                this,
+                                cancellationToken);
+
+                        await container.StartAsync(
+                            cancellationToken);
+
+                        return container;
+                    },
+                    LazyThreadSafetyMode.ExecutionAndPublication));
+
+        return await lazyContainer.Value;
+    }
+
+    public async Task<INetwork> GetOrCreateNetworkAsync(
+        string key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("Container key cannot be null or whitespace.", nameof(key));
         }
 
         Lazy<Task<NetworkRegistration>> registration =
@@ -33,47 +98,58 @@ public sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
         return (await registration.Value).Network;
     }
 
-    public Task RegisterContainerAsync(
-        string name,
-        IContainer container)
+    public async ValueTask DisposeAsync()
     {
-        if (string.IsNullOrWhiteSpace(name))
+        if (_disposed)
         {
-            throw new ArgumentException(
-                "Container name cannot be null or whitespace.",
-                nameof(name));
+            return;
         }
 
-        if (container == null)
+        _disposed = true;
+
+        foreach (Lazy<Task<IContainer>> registration in _containers.Values.Reverse())
         {
-            throw new ArgumentException("Container cannot be null");
+            if (registration.IsValueCreated)
+            {
+                await (await registration.Value)
+                    .DisposeAsync();
+            }
         }
 
-        if (!_containers.TryAdd(name, container))
+        foreach (Lazy<Task<NetworkRegistration>> registration in _networks.Values.Reverse())
         {
-            throw new InvalidOperationException(
-                $"A container named '{name}' has already been registered.");
+            if (registration.IsValueCreated)
+            {
+                await (await registration.Value)
+                    .Network
+                    .DisposeAsync();
+            }
         }
 
-        return Task.CompletedTask;
+        _containers.Clear();
+        _registrations.Clear();
+        _networks.Clear();
     }
 
-    public bool TryGetContainer(
-        string name,
-        out IContainer? container)
+    // Existing NetworkRegistration and CreateNetwork implementation.
+
+    private sealed record NetworkRegistration
     {
-        if (string.IsNullOrWhiteSpace(name))
+        public NetworkRegistration(string key,
+        string dockerNetworkName,
+        INetwork network)
         {
-            throw new ArgumentException(
-                "Container name cannot be null or whitespace.",
-                nameof(name));
+            Key = key;
+            DockerNetworkName = dockerNetworkName;
+            Network = network;
         }
 
-        return _containers.TryGetValue(name, out container);
+        public string Key { get; }
+        public string DockerNetworkName { get; }
+        public INetwork Network { get; }
     }
 
-    private static Lazy<Task<NetworkRegistration>> CreateNetwork(
-        string key)
+    private static Lazy<Task<NetworkRegistration>> CreateNetwork(string key)
     {
         return new Lazy<Task<NetworkRegistration>>(
             async () =>
@@ -94,81 +170,22 @@ public sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
             LazyThreadSafetyMode.ExecutionAndPublication);
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _disposed = true;
-
-        List<Exception> exceptions = [];
-
-        foreach (IContainer container in _containers.Values.Reverse())
-        {
-            try
-            {
-                await container.DisposeAsync();
-            }
-            catch (Exception ex)
-            {
-                exceptions.Add(ex);
-            }
-        }
-
-        foreach (Lazy<Task<NetworkRegistration>> registration in _networks.Values.Reverse())
-        {
-            try
-            {
-                if (registration.IsValueCreated)
-                {
-                    NetworkRegistration networkRegistration =
-                        await registration.Value;
-
-                    await networkRegistration.Network.DisposeAsync();
-                }
-            }
-            catch (Exception ex)
-            {
-                exceptions.Add(ex);
-            }
-        }
-
-        _containers.Clear();
-        _networks.Clear();
-
-        if (exceptions.Count > 0)
-        {
-            throw new AggregateException(
-                "One or more errors occurred while disposing container resources.",
-                exceptions);
-        }
-    }
-    private sealed record NetworkRegistration
-    {
-        public NetworkRegistration(string Key, string DockerNetworkName, INetwork Network)
-        {
-            this.Key = Key;
-            this.DockerNetworkName = DockerNetworkName;
-            this.Network = Network;
-        }
-
-        public string Key { get; }
-        public string DockerNetworkName { get; }
-        public INetwork Network { get; }
-    };
-
     private static string CreateDockerNetworkName(string key)
     {
-        string sanitizedKey = Regex.Replace(
-            key.ToLowerInvariant(),
-            "[^a-z0-9_.-]",
-            "-");
+        string sanitizedKey =
+            Regex.Replace(
+                key.ToLowerInvariant(),
+                "[^a-z0-9_.-]",
+                "-");
 
-        sanitizedKey = Regex.Replace(sanitizedKey, "-+", "-");
+        sanitizedKey =
+            Regex.Replace(
+                sanitizedKey,
+                "-+",
+                "-");
 
-        sanitizedKey = sanitizedKey.Trim('-');
+        sanitizedKey =
+            sanitizedKey.Trim('-');
 
         return $"{sanitizedKey}-{Guid.NewGuid():N}";
     }

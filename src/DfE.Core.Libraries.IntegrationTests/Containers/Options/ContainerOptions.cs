@@ -2,7 +2,6 @@
 
 public sealed class ContainerOptions
 {
-
     public string Registry { get; set; } = string.Empty;
     public string Owner { get; set; } = string.Empty;
 
