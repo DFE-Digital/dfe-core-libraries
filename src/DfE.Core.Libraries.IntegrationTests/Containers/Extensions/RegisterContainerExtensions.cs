@@ -22,11 +22,12 @@ public static class RegisterContainerExtensions
     public static IServiceCollection AddContainer(
         this IServiceCollection services,
         string key,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        Func<IServiceProvider, IEnumerable<IContainerBuilderHandler<ContainerBuilder>>>? handlersFactory = null)
     {
         ContainerOptions options =
             configuration
-            .GetRequiredSection(nameof(configuration))
+            .GetRequiredSection(nameof(ContainerOptions))
             .Get<ContainerOptions>() ?? throw new ArgumentException($"{nameof(ContainerOptions)} does not exist in configuration");
 
         services.AddSingleton<IValidateOptions<ContainerOptions>, ContainerOptionsValidator>();
@@ -39,8 +40,6 @@ public static class RegisterContainerExtensions
                 sp.GetRequiredService<IValidateOptions<ContainerOptions>>()
                     .Validate(key, options)
                     .ThrowIfFailed<ValidateOptionsResult>(key);
-
-                IReadOnlyCollection<IContainerBuilderHandler<ContainerBuilder>> handlers = GetHandlersFor(key, sp);
 
                 Func<IContainerRegistry, CancellationToken, Task<ContainerBuilderContext<ContainerBuilder>>> createBuilderContext =
                     async (registry, ct) =>
@@ -55,26 +54,15 @@ public static class RegisterContainerExtensions
 
                         return new ContainerBuilderContext<ContainerBuilder>(
                             builder,
-                            (builder) => builder.Build());
+                            static builder => builder.Build());
                     };
 
                 return new ContainerRegistration<ContainerBuilder>(
                     key,
                     createBuilderContext,
-                    handlers);
+                    handlersFactory?.Invoke(sp) ?? []);
             });
 
         return services;
-    }
-
-    private static IReadOnlyCollection<IContainerBuilderHandler<ContainerBuilder>> GetHandlersFor(string key, IServiceProvider provider)
-    {
-        IReadOnlyCollection<IContainerBuilderHandler<ContainerBuilder>> handlers =
-            provider.GetServices<ContainerBuilderHandlerRegistration<ContainerBuilder>>()
-                .Where((builderHandlerRegistration) => builderHandlerRegistration.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
-                .Select(x => x.Handler)
-                .ToArray();
-
-        return handlers;
     }
 }
