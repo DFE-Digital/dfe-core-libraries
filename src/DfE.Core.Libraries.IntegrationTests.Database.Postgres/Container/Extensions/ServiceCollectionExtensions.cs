@@ -1,5 +1,4 @@
 ﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Extensions;
-using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options.Extensions;
 using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
 using DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Options;
 using DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Provider;
@@ -19,13 +18,15 @@ public static class ServiceCollectionExtensions
         string key = "postgres")
     {
 
-        PostgresContainerOptions options =
-            configuration
-                .GetRequiredSection(nameof(PostgresContainerOptions))
-                .Get<PostgresContainerOptions>() ??
-                    throw new ArgumentException($"{nameof(PostgresContainerOptions)} does not exist in configuration");
+        services
+            .AddOptions<PostgresContainerOptions>(key)
+            .Bind(configuration.GetRequiredSection(nameof(PostgresContainerOptions)))
+            .ValidateOnStart();
 
-        services.TryAddSingleton<IValidateOptions<PostgresContainerOptions>, PostgresContainerOptionsValidator>();
+        services.TryAddEnumerable(
+            ServiceDescriptor.Singleton<
+                IValidateOptions<PostgresContainerOptions>,
+                PostgresContainerOptionsValidator>());
 
         // Shared ContainerRegistry activation
         services.AddContainerRegistry();
@@ -33,9 +34,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IContainerRegistration>(
             (sp) =>
             {
-                sp.GetRequiredService<IValidateOptions<PostgresContainerOptions>>()
-                    .Validate(key, options)
-                    .ThrowIfFailed<PostgresContainerOptions>(key);
+                PostgresContainerOptions options =
+                    sp.GetRequiredService<IOptionsMonitor<PostgresContainerOptions>>()
+                        .Get(key);
 
                 return new ContainerRegistration<PostgreSqlBuilder>(
                     key,
@@ -55,16 +56,6 @@ public static class ServiceCollectionExtensions
                             builder => builder.Build());
                     },
                     handlers: []);
-            });
-
-        // Named option for DatabaseOptions for runtime ConnectionString in provider
-        services
-            .AddOptions<PostgresDatabaseOptions>(key)
-            .Configure(opt =>
-            {
-                opt.Name = options.Database!.Name;
-                opt.Username = options.Database.Username;
-                opt.Password = options.Database.Password;
             });
 
         services.AddScoped<IPostgresDatabaseProvider, PostgresDatabaseProvider>();

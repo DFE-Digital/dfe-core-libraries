@@ -1,5 +1,4 @@
 ﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options;
-using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options.Extensions;
 using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
@@ -25,25 +24,26 @@ public static class RegisterContainerExtensions
         IConfiguration configuration,
         Func<IServiceProvider, IEnumerable<IContainerBuilderHandler<ContainerBuilder>>>? handlersFactory = null)
     {
-        ContainerOptions options =
-            configuration
-            .GetRequiredSection(nameof(ContainerOptions))
-            .Get<ContainerOptions>() ?? throw new ArgumentException($"{nameof(ContainerOptions)} does not exist in configuration");
+        services
+            .AddOptions<ContainerOptions>(key)
+            .Bind(configuration.GetRequiredSection(nameof(ContainerOptions)))
+            .ValidateOnStart();
 
-        services.AddSingleton<IValidateOptions<ContainerOptions>, ContainerOptionsValidator>();
+        services.TryAddEnumerable(
+            ServiceDescriptor.Singleton<
+                IValidateOptions<ContainerOptions>,
+                ContainerOptionsValidator>());
 
         services.AddContainerRegistry();
 
         services.AddSingleton<IContainerRegistration>(
             (sp) =>
             {
-                sp.GetRequiredService<IValidateOptions<ContainerOptions>>()
-                    .Validate(key, options)
-                    .ThrowIfFailed<ValidateOptionsResult>(key);
-
                 Func<IContainerRegistry, CancellationToken, Task<ContainerBuilderContext<ContainerBuilder>>> createBuilderContext =
                     async (registry, ct) =>
                     {
+                        ContainerOptions options = sp.GetRequiredService<IOptionsMonitor<ContainerOptions>>().Get(key);
+
                         ContainerBuilder builder =
                             new ContainerBuilder(options.Image)
                                 .WithContainerOptions<ContainerBuilder, IContainer, IContainerConfiguration>(options);

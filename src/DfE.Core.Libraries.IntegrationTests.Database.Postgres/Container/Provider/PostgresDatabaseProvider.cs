@@ -10,14 +10,14 @@ internal sealed class PostgresDatabaseProvider
     : IPostgresDatabaseProvider
 {
     private readonly IContainerRegistry _containerRegistry;
-    private readonly IOptionsMonitor<PostgresDatabaseOptions> _dbOptions;
+    private readonly IOptionsMonitor<PostgresContainerOptions> _options;
 
     public PostgresDatabaseProvider(
         IContainerRegistry containerRegistry,
-        IOptionsMonitor<PostgresDatabaseOptions> dbOptions)
+        IOptionsMonitor<PostgresContainerOptions> options)
     {
         _containerRegistry = containerRegistry;
-        _dbOptions = dbOptions;
+        _options = options;
     }
 
     public async Task<IDatabase> GetDatabaseAsync(
@@ -29,9 +29,11 @@ internal sealed class PostgresDatabaseProvider
                 key,
                 cancellationToken);
 
-        PostgresDatabaseOptions options = _dbOptions.Get(key);
+        PostgresContainerOptions options = _options.Get(key);
 
-        PostgresContainerDatabase database = new(options, new(container));
+        PostgresContainerDatabase database = new(
+            options.Database!,
+            new(container));
 
         await database.StartAsync(cancellationToken);
 
