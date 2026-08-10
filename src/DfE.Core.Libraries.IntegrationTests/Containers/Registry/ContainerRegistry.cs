@@ -4,46 +4,30 @@ using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using DotNet.Testcontainers.Networks;
 
-namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers;
+namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
 
 internal sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
 {
-    private readonly ConcurrentDictionary<string, ContainerRegistration> _registrations =
-        new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, IContainerRegistration> _registrations = new(StringComparer.OrdinalIgnoreCase);
 
-    private readonly ConcurrentDictionary<string, Lazy<Task<IContainer>>> _containers =
-        new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, Lazy<Task<IContainer>>> _containers = new(StringComparer.OrdinalIgnoreCase);
 
-    private readonly ConcurrentDictionary<string, Lazy<Task<NetworkRegistration>>> _networks =
-        new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, Lazy<Task<NetworkRegistration>>> _networks = new(StringComparer.OrdinalIgnoreCase);
 
     private bool _disposed;
 
-    public ContainerRegistry(IEnumerable<ContainerRegistration>? containerRegistrations)
+    public ContainerRegistry(
+        IEnumerable<IContainerRegistration>? registrations)
     {
-        containerRegistrations?
-            .ToList()
-            .ForEach((containerRegistrations)
-                => _registrations.GetOrAdd(containerRegistrations.Key, containerRegistrations));
-    }
-
-    public void Register(
-        string key,
-        Func<IContainerRegistry, CancellationToken, Task<IContainer>> create)
-    {
-        if (string.IsNullOrWhiteSpace(key))
+        foreach (IContainerRegistration registration in registrations ?? [])
         {
-            throw new ArgumentException("Container key cannot be null or whitespace.", nameof(key));
-        }
-
-        if (!_registrations.TryAdd(
-                key,
-                new ContainerRegistration(
-                    key,
-                    create)))
-        {
-            throw new InvalidOperationException(
-                $"Container '{key}' is already registered.");
+            if (!_registrations.TryAdd(
+                    registration.Key,
+                    registration))
+            {
+                throw new InvalidOperationException(
+                    $"Container {registration.Key} is already registered.");
+            }
         }
     }
 
@@ -56,7 +40,7 @@ internal sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
             throw new ArgumentException("Container key cannot be null or whitespace.", nameof(key));
         }
 
-        if (!_registrations.TryGetValue(key, out ContainerRegistration? registration))
+        if (!_registrations.TryGetValue(key, out IContainerRegistration? registration))
         {
             throw new InvalidOperationException($"Container: {key} has not been registered.");
         }
@@ -68,12 +52,9 @@ internal sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
                     async () =>
                     {
                         IContainer container =
-                            await registration.Create(
-                                this,
-                                cancellationToken);
+                            await registration.CreateAsync(this, cancellationToken);
 
-                        await container.StartAsync(
-                            cancellationToken);
+                        await container.StartAsync(cancellationToken);
 
                         return container;
                     },

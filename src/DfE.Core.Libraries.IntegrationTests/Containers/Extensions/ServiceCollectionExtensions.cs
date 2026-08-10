@@ -1,5 +1,6 @@
 ﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options;
 using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options.Extensions;
+using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
@@ -20,8 +21,8 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddContainer(
         this IServiceCollection services,
-        IConfiguration configuration,
-        string key)
+        string key,
+        IConfiguration configuration)
     {
         ContainerOptions options =
             configuration
@@ -30,30 +31,40 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<IValidateOptions<ContainerOptions>, ContainerOptionsValidator>();
 
-        services.AddSingleton(
+        services.AddContainerRegistry();
+
+        services.AddSingleton<IContainerRegistration>(
             (sp) =>
             {
                 sp.GetRequiredService<IValidateOptions<ContainerOptions>>()
                     .Validate(key, options)
                     .ThrowIfFailed<ValidateOptionsResult>(key);
 
-                ContainerRegistration registration = new(key, async (registry, ct) =>
-                {
-                    ContainerBuilder builder =
-                        new ContainerBuilder(options.Image)
-                            .WithContainerOptions<ContainerBuilder, IContainer, IContainerConfiguration>(options);
+                IReadOnlyCollection<IContainerBuilderHandler<ContainerBuilder>> handlers =
+                    sp.GetServices<ContainerBuilderHandlerRegistration<ContainerBuilder>>()
+                        .Where((builderHandlerRegistration)
+                            => builderHandlerRegistration.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+                        .Select(x => x.Handler)
+                        .ToArray();
 
-                    builder =
-                        await builder
-                            .WithContainerNetworksAsync<ContainerBuilder, IContainer, IContainerConfiguration>(options.Networks, registry);
+                return new ContainerRegistration<ContainerBuilder>(
+                    key,
+                    async (registry, ct) =>
+                    {
+                        ContainerBuilder builder =
+                            new ContainerBuilder(options.Image)
+                                .WithContainerOptions<ContainerBuilder, IContainer, IContainerConfiguration>(options);
 
-                    return builder.Build();
-                });
+                        builder =
+                            await builder
+                                .WithContainerNetworksAsync<ContainerBuilder, IContainer, IContainerConfiguration>(options.Networks, registry);
 
-                return registration;
+                        return new ContainerBuilderContext<ContainerBuilder>(
+                            builder,
+                            (builder) => builder.Build());
+                    },
+                    handlers);
             });
-
-        services.AddContainerRegistry();
 
         return services;
     }

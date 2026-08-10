@@ -1,6 +1,6 @@
-﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers;
-using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Extensions;
+﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Extensions;
 using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options.Extensions;
+using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
 using DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Options;
 using DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Provider;
 using Microsoft.Extensions.Configuration;
@@ -19,9 +19,6 @@ public static class ServiceCollectionExtensions
         string key = "postgres")
     {
 
-        // Shared ContainerRegistry activation
-        services.AddContainerRegistry();
-
         PostgresContainerOptions options =
             configuration
                 .GetRequiredSection(nameof(PostgresContainerOptions))
@@ -30,14 +27,17 @@ public static class ServiceCollectionExtensions
 
         services.TryAddSingleton<IValidateOptions<PostgresContainerOptions>, PostgresContainerOptionsValidator>();
 
-        services.AddSingleton<ContainerRegistration>(
+        // Shared ContainerRegistry activation
+        services.AddContainerRegistry();
+
+        services.AddSingleton<ContainerRegistration<PostgreSqlBuilder>>(
             (sp) =>
             {
                 sp.GetRequiredService<IValidateOptions<PostgresContainerOptions>>()
                     .Validate(key, options)
                     .ThrowIfFailed<PostgresContainerOptions>(key);
 
-                ContainerRegistration registration = new(
+                return new ContainerRegistration<PostgreSqlBuilder>(
                     key,
                     async (registry, ct) =>
                     {
@@ -48,19 +48,18 @@ public static class ServiceCollectionExtensions
                                 .WithPassword(options.Database.Password)
                                 .WithContainerOptions<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(options.Container);
 
-                        builder =
-                            await builder
-                                .WithContainerNetworksAsync<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(options.Container.Networks, registry);
+                        builder = await builder.WithContainerNetworksAsync<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(options.Container.Networks, registry);
 
-                        return builder.Build();
-                    });
-
-                return registration;
+                        return new ContainerBuilderContext<PostgreSqlBuilder>(
+                            builder,
+                            builder => builder.Build());
+                    },
+                    handlers: []);
             });
 
-
-        // Named option for DatabaseOptions used runtime connection string in provider
-        services.AddOptions<PostgresDatabaseOptions>(key)
+        // Named option for DatabaseOptions for runtime ConnectionString in provider
+        services
+            .AddOptions<PostgresDatabaseOptions>(key)
             .Configure(opt =>
             {
                 opt.Name = options.Database!.Name;
@@ -71,5 +70,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPostgresDatabaseProvider, PostgresDatabaseProvider>();
 
         return services;
+
     }
 }
