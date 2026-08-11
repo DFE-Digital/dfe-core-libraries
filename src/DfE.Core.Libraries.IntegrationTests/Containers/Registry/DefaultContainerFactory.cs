@@ -16,11 +16,11 @@ public sealed class DefaultContainerFactory : IContainerFactory
     public DefaultContainerFactory(
         IOptionsMonitor<ContainerOptions> optionsMonitor,
         IContainerNetworkRegistry networkRegistry,
-        IReadOnlyCollection<IContainerBuilderHandler<ContainerBuilder>> handlers)
+        IEnumerable<IContainerBuilderHandler<ContainerBuilder>> handlers)
     {
         _optionsMonitor = optionsMonitor;
         _networkRegistry = networkRegistry;
-        _handlers = handlers;
+        _handlers = handlers?.ToArray() ?? [];
     }
 
     public async Task<IContainer> CreateAsync(
