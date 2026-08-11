@@ -47,15 +47,25 @@ public static class ServiceCollectionExtensions
                                 .WithDatabase(options.Database!.Name)
                                 .WithUsername(options.Database.Username)
                                 .WithPassword(options.Database.Password)
-                                .WithContainerOptions<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(options.Container);
+                                .WithContainerOptions<
+                                    PostgreSqlBuilder,
+                                    PostgreSqlContainer,
+                                    PostgreSqlConfiguration>(
+                                        options.Container);
 
-                        builder = await builder.WithContainerNetworksAsync<PostgreSqlBuilder, PostgreSqlContainer, PostgreSqlConfiguration>(options.Container.Networks, registry);
+                        builder =
+                            await builder
+                                .WithContainerNetworksAsync<
+                                    PostgreSqlBuilder,
+                                    PostgreSqlContainer,
+                                    PostgreSqlConfiguration>(
+                                        options.Container.Networks,
+                                        registry);
 
-                        return new ContainerBuilderContext<PostgreSqlBuilder>(
-                            builder,
-                            builder => builder.Build());
+                        return builder;
                     },
-                    handlers: []);
+                    static builder => builder.Build(),
+                    []);
             });
 
         services.AddScoped<IPostgresDatabaseProvider, PostgresDatabaseProvider>();

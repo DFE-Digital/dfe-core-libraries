@@ -8,7 +8,11 @@ public sealed class ContainerRegistration<TBuilder>
     private readonly Func<
         IContainerRegistry,
         CancellationToken,
-        Task<ContainerBuilderContext<TBuilder>>> _createBuilder;
+        Task<TBuilder>> _createBuilder;
+
+    private readonly Func<
+        TBuilder,
+        IContainer> _build;
 
     private readonly IReadOnlyCollection<IContainerBuilderHandler<TBuilder>> _handlers;
 
@@ -17,11 +21,13 @@ public sealed class ContainerRegistration<TBuilder>
         Func<
             IContainerRegistry,
             CancellationToken,
-            Task<ContainerBuilderContext<TBuilder>>> createBuilder,
+            Task<TBuilder>> createBuilder,
+        Func<TBuilder, IContainer> build,
         IEnumerable<IContainerBuilderHandler<TBuilder>> handlers)
     {
         Key = key;
         _createBuilder = createBuilder;
+        _build = build;
         _handlers = handlers?.ToList() ?? [];
     }
 
@@ -31,17 +37,18 @@ public sealed class ContainerRegistration<TBuilder>
         IContainerRegistry registry,
         CancellationToken cancellationToken)
     {
-        ContainerBuilderContext<TBuilder> definition =
+        TBuilder builder =
             await _createBuilder(
                 registry,
                 cancellationToken);
 
         foreach (IContainerBuilderHandler<TBuilder> handler in _handlers)
         {
-            TBuilder builder = await handler.ApplyAsync(definition.Builder, cancellationToken);
-            definition.ReplaceBuilder(builder);
+            builder = await handler.ApplyAsync(
+                builder,
+                cancellationToken);
         }
 
-        return definition.Build();
+        return _build(builder);
     }
 }

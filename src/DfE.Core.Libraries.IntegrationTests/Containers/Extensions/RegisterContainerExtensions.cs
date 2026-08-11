@@ -39,27 +39,36 @@ public static class RegisterContainerExtensions
         services.AddSingleton<IContainerRegistration>(
             (sp) =>
             {
-                Func<IContainerRegistry, CancellationToken, Task<ContainerBuilderContext<ContainerBuilder>>> createBuilderContext =
-                    async (registry, ct) =>
-                    {
-                        ContainerOptions options = sp.GetRequiredService<IOptionsMonitor<ContainerOptions>>().Get(key);
+                Func<IContainerRegistry, CancellationToken, Task<ContainerBuilder>> createBuilderContext =
+                async (registry, ct) =>
+                {
+                    ContainerOptions options =
+                        sp.GetRequiredService<IOptionsMonitor<ContainerOptions>>()
+                            .Get(key);
 
-                        ContainerBuilder builder =
-                            new ContainerBuilder(options.Image)
-                                .WithContainerOptions<ContainerBuilder, IContainer, IContainerConfiguration>(options);
+                    ContainerBuilder builder =
+                        new ContainerBuilder(options.Image)
+                            .WithContainerOptions<
+                                ContainerBuilder,
+                                IContainer,
+                                IContainerConfiguration>(options);
 
-                        builder =
-                            await builder
-                                .WithContainerNetworksAsync<ContainerBuilder, IContainer, IContainerConfiguration>(options.Networks, registry);
+                    builder =
+                        await builder
+                            .WithContainerNetworksAsync<
+                                ContainerBuilder,
+                                IContainer,
+                                IContainerConfiguration>(
+                                    options.Networks,
+                                    registry);
 
-                        return new ContainerBuilderContext<ContainerBuilder>(
-                            builder,
-                            static builder => builder.Build());
-                    };
+                    return builder;
+                };
 
                 return new ContainerRegistration<ContainerBuilder>(
                     key,
                     createBuilderContext,
+                    static builder => builder.Build(),
                     handlersFactory?.Invoke(sp) ?? []);
             });
 
