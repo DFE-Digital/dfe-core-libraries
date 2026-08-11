@@ -21,7 +21,19 @@ public static class ContainerBuilderExtensions
                 .WithStartupCommands<TBuilder, TContainer, TConfiguration>(options.StartupArguments ?? [])
                 .WithMountedResources<TBuilder, TContainer, TConfiguration>(options.CopyResourcesIntoContainerBeforeInit ?? []);
 
-        //.WithEnvironment(options.StartupArguments?.ToDictionary(arg => arg.Key, arg => arg.Value) ?? new Dictionary<string, string>())
+        if (options.Labels.Any())
+        {
+            builder =
+                builder.WithLabel(
+                    options.Labels.ToDictionary(x => x.Key?.Trim(), x => x.Value?.Trim()));
+        }
+
+        if (options.Env.Any())
+        {
+            builder =
+                builder.WithEnvironment(
+                    options.Env.ToDictionary((x) => x.Key?.Trim(), x => x.Value?.Trim()));
+        }
 
         if (!string.IsNullOrWhiteSpace(options.ContainerName))
         {
