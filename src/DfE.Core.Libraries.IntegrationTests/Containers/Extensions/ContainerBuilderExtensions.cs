@@ -1,4 +1,4 @@
-﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options;
+﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options.Container;
 using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
@@ -46,7 +46,7 @@ public static class ContainerBuilderExtensions
     public static async Task<TBuilder> WithContainerNetworksAsync<TBuilder, TContainer, TConfiguration>(
         this TBuilder builder,
         IEnumerable<ContainerNetworkAttachment>? networks,
-        IContainerRegistry registry)
+        IContainerNetworkRegistry registry)
             where TContainer : IContainer
             where TConfiguration : IContainerConfiguration
             where TBuilder : ContainerBuilder<TBuilder, TContainer, TConfiguration>
