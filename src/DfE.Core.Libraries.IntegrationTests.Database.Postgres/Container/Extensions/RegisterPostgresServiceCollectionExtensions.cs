@@ -16,6 +16,8 @@ public static class RegisterPostgresServiceCollectionExtensions
         IConfiguration configuration,
         string key = "postgres")
     {
+        // Shared ContainerRegistry activation
+        services.AddContainerRegistry();
 
         services
             .AddOptions<PostgresContainerOptions>(key)
@@ -26,9 +28,6 @@ public static class RegisterPostgresServiceCollectionExtensions
             ServiceDescriptor.Singleton<
                 IValidateOptions<PostgresContainerOptions>,
                 PostgresContainerOptionsValidator>());
-
-        // Shared ContainerRegistry activation
-        services.AddContainerRegistry();
 
         services.AddSingleton<ContainerFactoryRegistration>(
             sp =>
