@@ -9,11 +9,11 @@ namespace DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container;
 
 internal sealed class PostgresContainerFactory : IContainerFactory
 {
-    private readonly PostgresContainerOptions _options;
+    private readonly IOptionsMonitor<PostgresContainerOptions> _options;
     private readonly IContainerNetworkRegistry _networkRegistry;
 
     public PostgresContainerFactory(
-        PostgresContainerOptions options,
+        IOptionsMonitor<PostgresContainerOptions> options,
         IContainerNetworkRegistry networkRegistry)
     {
         _options = options;
@@ -22,15 +22,17 @@ internal sealed class PostgresContainerFactory : IContainerFactory
 
     public async Task<IContainer> CreateAsync(string key, CancellationToken cancellationToken)
     {
+        PostgresContainerOptions containerOptions = _options.Get(key);
+
         PostgreSqlBuilder builder =
-            new PostgreSqlBuilder(_options.Container!.Image)
-                .WithDatabase(_options.Database!.Name)
-                .WithUsername(_options.Database.Username)
-                .WithPassword(_options.Database.Password)
+            new PostgreSqlBuilder(containerOptions.Container!.Image)
+                .WithDatabase(containerOptions.Database!.Name)
+                .WithUsername(containerOptions.Database.Username)
+                .WithPassword(containerOptions.Database.Password)
                 .WithContainerOptions<
                     PostgreSqlBuilder,
                     PostgreSqlContainer,
-                    PostgreSqlConfiguration>(_options.Container);
+                    PostgreSqlConfiguration>(containerOptions.Container);
 
         builder =
             await builder
@@ -38,7 +40,7 @@ internal sealed class PostgresContainerFactory : IContainerFactory
                     PostgreSqlBuilder,
                     PostgreSqlContainer,
                     PostgreSqlConfiguration>(
-                        _options.Container.Networks,
+                        containerOptions.Container.Networks,
                         _networkRegistry);
 
         return builder.Build();

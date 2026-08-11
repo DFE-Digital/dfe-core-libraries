@@ -30,17 +30,13 @@ public static class RegisterPostgresServiceCollectionExtensions
         // Shared ContainerRegistry activation
         services.AddContainerRegistry();
 
-        services.AddSingleton<IContainerFactory>(
+        services.AddSingleton<ContainerFactoryRegistration>(
             sp =>
             {
-                PostgresContainerOptions options =
-                    sp.GetRequiredService<
-                        IOptionsMonitor<PostgresContainerOptions>>()
-                        .Get(key);
-
-                return new PostgresContainerFactory(
-                    options,
-                    sp.GetRequiredService<IContainerNetworkRegistry>());
+                return new
+                    ContainerFactoryRegistration(
+                        key,
+                        sp.GetRequiredService<PostgresContainerFactory>());
             });
 
         services.AddScoped<IPostgresDatabaseProvider, PostgresDatabaseProvider>();

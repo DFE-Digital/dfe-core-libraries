@@ -1,11 +1,12 @@
 ﻿using System.Collections.Concurrent;
+using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Extensions;
 using DotNet.Testcontainers.Containers;
 
 namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
 
 internal sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
 {
-    private readonly IContainerFactoryRegistry _factoryRegistry;
+    private readonly IReadOnlyDictionary<string, IContainerFactory> _factoryRegistry;
 
     private readonly ConcurrentDictionary<
         string,
@@ -15,9 +16,12 @@ internal sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
     private bool _disposed;
 
     public ContainerRegistry(
-        IContainerFactoryRegistry factoryRegistry)
+        IEnumerable<ContainerFactoryRegistration> factoryRegistrations)
     {
-        _factoryRegistry = factoryRegistry;
+        _factoryRegistry =
+            factoryRegistrations.ToDictionary(
+                x => x.Key,
+                x => x.Factory);
     }
 
     public async Task<IContainer> GetOrCreateContainerAsync(
@@ -36,7 +40,7 @@ internal sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
                     async () =>
                     {
                         IContainerFactory factory =
-                            _factoryRegistry.GetFactory(key);
+                            _factoryRegistry[key];
 
                         IContainer container =
                             await factory.CreateAsync(

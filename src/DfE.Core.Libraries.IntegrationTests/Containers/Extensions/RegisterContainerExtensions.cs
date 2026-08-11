@@ -14,7 +14,6 @@ public static class RegisterContainerExtensions
         this IServiceCollection services)
     {
         services.AddSingleton<DefaultContainerFactory>();
-        services.AddSingleton<IContainerFactoryRegistry, ContainerFactoryRegistry>();
         services.TryAddSingleton<IContainerRegistry, ContainerRegistry>();
         services.TryAddSingleton<IContainerNetworkRegistry, ContainerNetworkRegistry>();
 
@@ -41,16 +40,12 @@ public static class RegisterContainerExtensions
 
         configureHandlers?.Invoke(services);
 
-        services.AddSingleton<IContainerFactory>(
+        services.AddSingleton<ContainerFactoryRegistration>(
             sp =>
             {
-                IEnumerable<IContainerBuilderHandler<ContainerBuilder>> handlers =
-                    sp.GetServices<IContainerBuilderHandler<ContainerBuilder>>();
-
-                return new DefaultContainerFactory(
-                    sp.GetRequiredService<IOptionsMonitor<ContainerOptions>>(),
-                    sp.GetRequiredService<IContainerNetworkRegistry>(),
-                    handlers.ToArray());
+                return new ContainerFactoryRegistration(
+                    key,
+                    sp.GetRequiredService<DefaultContainerFactory>());
             });
 
         return services;
