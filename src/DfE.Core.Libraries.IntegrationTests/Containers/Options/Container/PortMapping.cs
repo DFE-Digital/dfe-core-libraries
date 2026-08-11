@@ -1,4 +1,4 @@
-﻿namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options;
+﻿namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options.Container;
 
 public sealed class PortMapping
 {

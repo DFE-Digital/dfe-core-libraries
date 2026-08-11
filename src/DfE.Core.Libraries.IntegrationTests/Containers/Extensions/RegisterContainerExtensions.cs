@@ -1,8 +1,6 @@
-﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options;
+﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options.Container;
 using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
 using DotNet.Testcontainers.Builders;
-using DotNet.Testcontainers.Configurations;
-using DotNet.Testcontainers.Containers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -12,9 +10,14 @@ namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Extensions
 
 public static class RegisterContainerExtensions
 {
-    public static IServiceCollection AddContainerRegistry(this IServiceCollection services)
+    public static IServiceCollection AddContainerRegistry(
+        this IServiceCollection services)
     {
+        services.AddSingleton<DefaultContainerFactory>();
+        services.AddSingleton<IContainerFactoryRegistry, ContainerFactoryRegistry>();
         services.TryAddSingleton<IContainerRegistry, ContainerRegistry>();
+        services.TryAddSingleton<IContainerNetworkRegistry, ContainerNetworkRegistry>();
+
         return services;
     }
 
@@ -22,8 +25,10 @@ public static class RegisterContainerExtensions
         this IServiceCollection services,
         string key,
         IConfiguration configuration,
-        Func<IServiceProvider, IEnumerable<IContainerBuilderHandler<ContainerBuilder>>>? handlersFactory = null)
+        Action<IServiceCollection>? configureHandlers = null)
     {
+        services.AddContainerRegistry();
+
         services
             .AddOptions<ContainerOptions>(key)
             .Bind(configuration.GetRequiredSection(nameof(ContainerOptions)))
@@ -34,42 +39,18 @@ public static class RegisterContainerExtensions
                 IValidateOptions<ContainerOptions>,
                 ContainerOptionsValidator>());
 
-        services.AddContainerRegistry();
+        configureHandlers?.Invoke(services);
 
-        services.AddSingleton<IContainerRegistration>(
-            (sp) =>
+        services.AddSingleton<IContainerFactory>(
+            sp =>
             {
-                Func<IContainerRegistry, CancellationToken, Task<ContainerBuilder>> createBuilderContext =
-                async (registry, ct) =>
-                {
-                    ContainerOptions options =
-                        sp.GetRequiredService<IOptionsMonitor<ContainerOptions>>()
-                            .Get(key);
+                IEnumerable<IContainerBuilderHandler<ContainerBuilder>> handlers =
+                    sp.GetServices<IContainerBuilderHandler<ContainerBuilder>>();
 
-                    ContainerBuilder builder =
-                        new ContainerBuilder(options.Image)
-                            .WithContainerOptions<
-                                ContainerBuilder,
-                                IContainer,
-                                IContainerConfiguration>(options);
-
-                    builder =
-                        await builder
-                            .WithContainerNetworksAsync<
-                                ContainerBuilder,
-                                IContainer,
-                                IContainerConfiguration>(
-                                    options.Networks,
-                                    registry);
-
-                    return builder;
-                };
-
-                return new ContainerRegistration<ContainerBuilder>(
-                    key,
-                    createBuilderContext,
-                    static builder => builder.Build(),
-                    handlersFactory?.Invoke(sp) ?? []);
+                return new DefaultContainerFactory(
+                    sp.GetRequiredService<IOptionsMonitor<ContainerOptions>>(),
+                    sp.GetRequiredService<IContainerNetworkRegistry>(),
+                    handlers.ToArray());
             });
 
         return services;
