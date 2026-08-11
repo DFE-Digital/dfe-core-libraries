@@ -1,5 +1,4 @@
 ﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Extensions;
-using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
 using DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Options;
 using DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Provider;
 using Microsoft.Extensions.Configuration;
@@ -28,6 +27,8 @@ public static class RegisterPostgresServiceCollectionExtensions
             ServiceDescriptor.Singleton<
                 IValidateOptions<PostgresContainerOptions>,
                 PostgresContainerOptionsValidator>());
+
+        services.AddSingleton<PostgresContainerFactory>();
 
         services.AddSingleton<ContainerFactoryRegistration>(
             sp =>
