@@ -14,8 +14,8 @@ public static class RegisterContainerExtensions
     public static IServiceCollection AddContainerRegistry(
         this IServiceCollection services)
     {
-        services.TryAddSingleton<IContainerRegistry, ContainerRegistry>();
-        services.TryAddSingleton<IContainerNetworkRegistry, ContainerNetworkRegistry>();
+        services.TryAddScoped<IContainerRegistry, ContainerRegistry>();
+        services.TryAddScoped<IContainerNetworkRegistry, ContainerNetworkRegistry>();
 
         return services;
     }
@@ -37,7 +37,7 @@ public static class RegisterContainerExtensions
                 IValidateOptions<ContainerOptions>,
                 ContainerOptionsValidator>());
 
-        services.AddTransient<DefaultContainerFactory>();
+        services.AddScoped<DefaultContainerFactory>();
 
         services.AddScoped<ContainerFactoryRegistration>(
             sp => new(

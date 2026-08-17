@@ -5,7 +5,7 @@ using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
 using DotNet.Testcontainers.Networks;
 
-namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Extensions;
+namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry.Builder;
 
 public static class ContainerBuilderExtensions
 {
