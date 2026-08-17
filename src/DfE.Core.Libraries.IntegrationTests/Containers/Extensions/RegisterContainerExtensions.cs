@@ -37,15 +37,12 @@ public static class RegisterContainerExtensions
                 IValidateOptions<ContainerOptions>,
                 ContainerOptionsValidator>());
 
-        services.AddScoped<DefaultContainerFactory>();
-        services.TryAddScoped<Dictionary<string, IContainerFactory>>(
-            sp =>
-            {
-                return new()
-                {
-                    { key,  sp.GetRequiredService<DefaultContainerFactory>()}
-                };
-            });
+        services.AddTransient<DefaultContainerFactory>();
+
+        services.AddScoped<ContainerFactoryRegistration>(
+            sp => new(
+                    key,
+                    sp.GetRequiredService<DefaultContainerFactory>()));
 
         // Default if no registration from client for HandlerRegistry...
         services.TryAddScoped<Dictionary<string, Func<IReadOnlyCollection<IConfigureContainerBuilderHandler<ContainerBuilder>>>>>((sp) => []);

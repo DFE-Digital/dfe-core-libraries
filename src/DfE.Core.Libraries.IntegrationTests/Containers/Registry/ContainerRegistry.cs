@@ -1,11 +1,12 @@
 ﻿using System.Collections.Concurrent;
+using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Extensions;
 using DotNet.Testcontainers.Containers;
 
 namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
 
 internal sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
 {
-    private readonly IReadOnlyDictionary<string, IContainerFactory> _factoryRegistry;
+    private readonly IEnumerable<ContainerFactoryRegistration> _registrations;
 
     private readonly ConcurrentDictionary<
         string,
@@ -15,15 +16,19 @@ internal sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
     private bool _disposed;
 
     public ContainerRegistry(
-        Dictionary<string, IContainerFactory> factoryRegistry)
+        IEnumerable<ContainerFactoryRegistration> registrations)
     {
-        _factoryRegistry = factoryRegistry ?? throw new ArgumentNullException(nameof(factoryRegistry));
+        _registrations = registrations;
     }
 
     public async Task<IContainer> GetOrCreateContainerAsync(
         string key,
         CancellationToken cancellationToken = default)
     {
+        IReadOnlyDictionary<string, IContainerFactory> registrationFactory = _registrations.ToDictionary(
+            t => t.Key,
+            t => t.Factory);
+
         if (string.IsNullOrWhiteSpace(key))
         {
             throw new ArgumentException("Container key cannot be null or whitespace");
@@ -36,7 +41,7 @@ internal sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
                     async () =>
                     {
                         IContainerFactory factory =
-                            _factoryRegistry[key];
+                            registrationFactory[key];
 
                         IContainer container =
                             await factory.CreateAsync(
