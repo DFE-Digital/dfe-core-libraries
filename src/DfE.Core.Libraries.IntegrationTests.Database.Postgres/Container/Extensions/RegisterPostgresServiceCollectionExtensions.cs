@@ -17,7 +17,10 @@ public static class RegisterPostgresServiceCollectionExtensions
     {
         // Shared ContainerRegistry activation
         services.AddContainerRegistry();
+        // Shared for IValidator<ContainerOptions>
+        services.AddContainerOptionsValidation();
 
+        // PostgresOptions and validator
         services
             .AddOptions<PostgresContainerOptions>(key)
             .Bind(configuration.GetRequiredSection(nameof(PostgresContainerOptions)))
@@ -39,6 +42,5 @@ public static class RegisterPostgresServiceCollectionExtensions
         services.AddScoped<IPostgresDatabaseProvider, PostgresDatabaseProvider>();
 
         return services;
-
     }
 }
