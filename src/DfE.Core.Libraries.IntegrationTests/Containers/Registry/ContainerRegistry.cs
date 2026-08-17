@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Extensions;
 using DotNet.Testcontainers.Containers;
 
 namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
@@ -16,12 +15,9 @@ internal sealed class ContainerRegistry : IContainerRegistry, IAsyncDisposable
     private bool _disposed;
 
     public ContainerRegistry(
-        IEnumerable<ContainerFactoryRegistration> factoryRegistrations)
+        Dictionary<string, IContainerFactory> factoryRegistry)
     {
-        _factoryRegistry =
-            factoryRegistrations.ToDictionary(
-                x => x.Key,
-                x => x.Factory);
+        _factoryRegistry = factoryRegistry ?? throw new ArgumentNullException(nameof(factoryRegistry));
     }
 
     public async Task<IContainer> GetOrCreateContainerAsync(
