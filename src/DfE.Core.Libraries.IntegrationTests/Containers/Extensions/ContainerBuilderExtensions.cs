@@ -9,6 +9,7 @@ namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Extensions
 
 public static class ContainerBuilderExtensions
 {
+    // Note: public as shared with Postgres project could be split 
     public static TBuilder WithContainerOptions<TBuilder, TContainer, TConfiguration>(this TBuilder builder, ContainerOptions options)
             where TContainer : IContainer
             where TConfiguration : IContainerConfiguration
@@ -43,6 +44,7 @@ public static class ContainerBuilderExtensions
         return builder;
     }
 
+    // Note: public as shared with Postgres project could be split 
     public static async Task<TBuilder> WithContainerNetworksAsync<TBuilder, TContainer, TConfiguration>(
         this TBuilder builder,
         IEnumerable<ContainerNetworkAttachment>? networks,

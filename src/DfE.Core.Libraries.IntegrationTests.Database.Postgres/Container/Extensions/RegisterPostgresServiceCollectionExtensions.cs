@@ -28,16 +28,13 @@ public static class RegisterPostgresServiceCollectionExtensions
                 IValidateOptions<PostgresContainerOptions>,
                 PostgresContainerOptionsValidator>());
 
-        services.AddSingleton<PostgresContainerFactory>();
+        services.AddScoped<PostgresContainerFactory>();
 
-        services.AddSingleton<ContainerFactoryRegistration>(
-            sp =>
-            {
-                return new
+        services.AddScoped<ContainerFactoryRegistration>(
+            sp => new
                     ContainerFactoryRegistration(
                         key,
-                        sp.GetRequiredService<PostgresContainerFactory>());
-            });
+                        sp.GetRequiredService<PostgresContainerFactory>()));
 
         services.AddScoped<IPostgresDatabaseProvider, PostgresDatabaseProvider>();
 

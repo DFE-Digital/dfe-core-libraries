@@ -1,5 +1,6 @@
 ﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options.Container;
 using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
+using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry.BuilderHandler;
 using DotNet.Testcontainers.Builders;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,7 +14,6 @@ public static class RegisterContainerExtensions
     public static IServiceCollection AddContainerRegistry(
         this IServiceCollection services)
     {
-        services.AddSingleton<DefaultContainerFactory>();
         services.TryAddSingleton<IContainerRegistry, ContainerRegistry>();
         services.TryAddSingleton<IContainerNetworkRegistry, ContainerNetworkRegistry>();
 
@@ -23,8 +23,7 @@ public static class RegisterContainerExtensions
     public static IServiceCollection AddContainer(
         this IServiceCollection services,
         string key,
-        IConfiguration configuration,
-        Action<IServiceCollection>? configureHandlers = null)
+        IConfiguration configuration)
     {
         services.AddContainerRegistry();
 
@@ -38,15 +37,15 @@ public static class RegisterContainerExtensions
                 IValidateOptions<ContainerOptions>,
                 ContainerOptionsValidator>());
 
-        configureHandlers?.Invoke(services);
+        services.AddTransient<DefaultContainerFactory>();
 
-        services.AddSingleton<ContainerFactoryRegistration>(
-            sp =>
-            {
-                return new ContainerFactoryRegistration(
+        services.AddScoped<ContainerFactoryRegistration>(
+            sp => new(
                     key,
-                    sp.GetRequiredService<DefaultContainerFactory>());
-            });
+                    sp.GetRequiredService<DefaultContainerFactory>()));
+
+        // Default if no registration from client for HandlerRegistry...
+        services.TryAddScoped<Dictionary<string, Func<IReadOnlyCollection<IConfigureContainerBuilderHandler<ContainerBuilder>>>>>((sp) => []);
 
         return services;
     }
