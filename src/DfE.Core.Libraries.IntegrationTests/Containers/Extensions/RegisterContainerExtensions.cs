@@ -1,5 +1,7 @@
 ﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options.Container;
 using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
+using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry.BuilderHandler;
+using DotNet.Testcontainers.Builders;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -44,6 +46,9 @@ public static class RegisterContainerExtensions
                     { key,  sp.GetRequiredService<DefaultContainerFactory>()}
                 };
             });
+
+        // Default if no registration from client for HandlerRegistry...
+        services.TryAddScoped<Dictionary<string, Func<IReadOnlyCollection<IConfigureContainerBuilderHandler<ContainerBuilder>>>>>((sp) => []);
 
         return services;
     }
