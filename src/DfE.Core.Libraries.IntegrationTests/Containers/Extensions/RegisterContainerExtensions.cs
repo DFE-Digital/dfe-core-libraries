@@ -26,16 +26,12 @@ public static class RegisterContainerExtensions
         IConfiguration configuration)
     {
         services.AddContainerRegistry();
+        services.AddContainerOptionsValidation();
 
         services
             .AddOptions<ContainerOptions>(key)
             .Bind(configuration.GetRequiredSection(nameof(ContainerOptions)))
             .ValidateOnStart();
-
-        services.TryAddEnumerable(
-            ServiceDescriptor.Singleton<
-                IValidateOptions<ContainerOptions>,
-                ContainerOptionsValidator>());
 
         services.AddScoped<DefaultContainerFactory>();
 
