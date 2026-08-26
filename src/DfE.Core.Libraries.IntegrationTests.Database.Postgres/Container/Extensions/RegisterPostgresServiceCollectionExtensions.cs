@@ -34,12 +34,13 @@ public static class RegisterPostgresServiceCollectionExtensions
         services.AddScoped<PostgresContainerFactory>();
 
         services.AddScoped<ContainerFactoryRegistration>(
-            sp => new
+            (sp) => new
                     ContainerFactoryRegistration(
                         key,
                         sp.GetRequiredService<PostgresContainerFactory>()));
 
         services.AddScoped<IPostgresDatabaseProvider, PostgresDatabaseProvider>();
+        services.AddScoped<IPostgresContainerConnectionStringProvider, PostgresContainerConnectionStringProvider>();
 
         return services;
     }
