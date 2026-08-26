@@ -4,10 +4,9 @@ using DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Options;
 using DotNet.Testcontainers.Containers;
 using Microsoft.Extensions.Options;
 
-namespace DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Provider;
+namespace DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Providers;
 
-internal sealed class PostgresDatabaseProvider
-    : IPostgresDatabaseProvider
+internal sealed class PostgresDatabaseProvider : IPostgresDatabaseProvider
 {
     private readonly IContainerRegistry _containerRegistry;
     private readonly IOptionsMonitor<PostgresContainerOptions> _options;
@@ -40,4 +39,3 @@ internal sealed class PostgresDatabaseProvider
         return database;
     }
 }
-
