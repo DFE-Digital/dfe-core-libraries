@@ -1,6 +1,6 @@
 ﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Extensions;
 using DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Options;
-using DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Provider;
+using DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Providers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;

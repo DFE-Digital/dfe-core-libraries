@@ -1,6 +1,6 @@
 ﻿using DfE.Core.Libraries.IntegrationTests.Database.Abstractions;
 
-namespace DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Provider;
+namespace DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Providers;
 
 public interface IPostgresDatabaseProvider
 {

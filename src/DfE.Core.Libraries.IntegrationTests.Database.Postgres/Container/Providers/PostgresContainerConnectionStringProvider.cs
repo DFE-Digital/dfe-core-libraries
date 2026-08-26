@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Options;
 using Npgsql;
 
-namespace DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Provider;
+namespace DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Providers;
 
 internal sealed class PostgresContainerConnectionStringProvider : IPostgresContainerConnectionStringProvider
 {
