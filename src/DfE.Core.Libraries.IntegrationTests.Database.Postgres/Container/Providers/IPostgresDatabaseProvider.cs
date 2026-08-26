@@ -5,4 +5,5 @@ namespace DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Provid
 public interface IPostgresDatabaseProvider
 {
     Task<IDatabase> GetDatabaseAsync(string key, CancellationToken cancellationToken = default);
+    Task<string> GetConnectionStringAsync(string key, string? networkName = null, CancellationToken cancellationToken = default);
 }

@@ -40,7 +40,6 @@ public static class RegisterPostgresServiceCollectionExtensions
                         sp.GetRequiredService<PostgresContainerFactory>()));
 
         services.AddScoped<IPostgresDatabaseProvider, PostgresDatabaseProvider>();
-        services.AddScoped<IPostgresContainerConnectionStringProvider, PostgresContainerConnectionStringProvider>();
 
         return services;
     }
