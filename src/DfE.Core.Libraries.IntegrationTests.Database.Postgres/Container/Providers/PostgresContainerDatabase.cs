@@ -13,7 +13,6 @@ internal sealed class PostgresContainerDatabase : IDatabase
     private readonly Lazy<IContainer> _container;
     private readonly SemaphoreSlim _startLock = new(1, 1);
 
-    private DatabaseEndpoint? _endpoint;
     private bool _started;
 
     public PostgresContainerDatabase(
@@ -37,13 +36,6 @@ internal sealed class PostgresContainerDatabase : IDatabase
         _startLock.Dispose();
     }
 
-    public DatabaseEndpoint GetDatabaseEndpoint()
-    {
-        EnsureDatabaseStarted();
-
-        return _endpoint!;
-    }
-
     public async Task StartAsync(CancellationToken ctx = default)
     {
         if (_started)
@@ -61,10 +53,6 @@ internal sealed class PostgresContainerDatabase : IDatabase
             }
 
             await _container.Value.StartAsync(ctx);
-
-            _endpoint = new DatabaseEndpoint(
-                host: _container.Value.Hostname,
-                port: GetPublicContainerPort(_container.Value));
 
             _started = true;
         }
@@ -95,12 +83,14 @@ internal sealed class PostgresContainerDatabase : IDatabase
     {
         EnsureDatabaseStarted();
 
-        return
-            $"Host={_endpoint!.Host};" +
-            $"Port={_endpoint.Port};" +
-            $"Database={_databaseOptions.Name};" +
-            $"Username={_databaseOptions.Username};" +
-            $"Password={_databaseOptions.Password};";
+        return new NpgsqlConnectionStringBuilder
+        {
+            Host = _container.Value.Hostname,
+            Port = GetPublicContainerPort(_container.Value),
+            Database = _databaseOptions.Name,
+            Username = _databaseOptions.Username,
+            Password = _databaseOptions.Password
+        }.ConnectionString;
     }
 
     private static ushort GetPublicContainerPort(
@@ -111,7 +101,7 @@ internal sealed class PostgresContainerDatabase : IDatabase
 
     private void EnsureDatabaseStarted()
     {
-        if (!_started || _endpoint is null)
+        if (!_started)
         {
             throw new InvalidOperationException(
                 "Database has not been started");
