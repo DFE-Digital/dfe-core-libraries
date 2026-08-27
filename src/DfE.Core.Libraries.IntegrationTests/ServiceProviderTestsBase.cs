@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DfE.Core.Libraries.IntegrationTests.Abstractions;
+
 public abstract class ServiceProviderTestsBase : IntegrationTestsBase
 {
     private IServiceProvider? _applicationServicesRootProvider;
