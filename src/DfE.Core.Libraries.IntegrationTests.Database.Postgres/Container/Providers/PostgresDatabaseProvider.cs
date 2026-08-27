@@ -23,9 +23,7 @@ internal sealed class PostgresDatabaseProvider : IPostgresDatabaseProvider
         _options = options;
     }
 
-    public async Task<IDatabase> GetDatabaseAsync(
-        string key,
-        CancellationToken cancellationToken = default)
+    public async Task<IDatabase> GetDatabaseAsync(string key, CancellationToken cancellationToken = default)
     {
         IContainer container =
             await _containerRegistry.GetOrCreateContainerAsync(
@@ -43,10 +41,7 @@ internal sealed class PostgresDatabaseProvider : IPostgresDatabaseProvider
         return database;
     }
 
-    public async Task<string> GetConnectionStringAsync(
-        string key,
-        string? networkName = null,
-        CancellationToken cancellationToken = default)
+    public async Task<string> GetConnectionStringAsync(string key, string? networkName = null, CancellationToken cancellationToken = default)
     {
         IContainer container =
             await _containerRegistry.GetOrCreateContainerAsync(

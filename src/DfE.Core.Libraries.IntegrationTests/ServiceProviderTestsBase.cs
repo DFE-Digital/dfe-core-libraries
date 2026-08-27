@@ -20,13 +20,20 @@ public abstract class ServiceProviderTestsBase : IntegrationTestsBase
         _applicationServicesRootProvider ??
             throw new InvalidOperationException("Application services have not been initialised");
 
-    protected sealed override async Task StartApplicationAsync(
+    protected sealed override Task StartApplicationAsync(
         CancellationToken ct = default)
     {
+        if (_applicationServicesRootProvider is not null)
+        {
+            throw new InvalidOperationException("Application services have already been initialised");
+        }
+
         _applicationServicesRootProvider =
             BuildApplicationServices(
-                configuration: await MergeTestAndApplicationConfiguration(),
+                configuration: MergeTestAndApplicationConfiguration(),
                 configure: ConfigureApplicationServices);
+
+        return Task.CompletedTask;
     }
 
     protected sealed override async Task DisposeApplicationAsync()
@@ -44,8 +51,6 @@ public abstract class ServiceProviderTestsBase : IntegrationTestsBase
     protected virtual void ConfigureApplicationServices(IServiceCollection services, IConfiguration configuration) { }
 
     protected virtual void ConfigureApplicationConfiguration(IConfigurationBuilder builder) { }
-
-    protected virtual Task<IConfiguration> GetApplicationConfigurationAsync() => Task.FromResult(ConfigurationDefault.Create());
 
     protected TSingletonService ResolveSingletonApplicationService<TSingletonService>()
         where TSingletonService : notnull
@@ -67,13 +72,15 @@ public abstract class ServiceProviderTestsBase : IntegrationTestsBase
         return await action(service);
     }
 
-    private async Task<IConfiguration> MergeTestAndApplicationConfiguration()
+    private IConfiguration MergeTestAndApplicationConfiguration()
     {
+        // test config
         IConfigurationBuilder builder =
             ConfigurationDefault.CreateBuilder()
-                .AddConfiguration(TestServicesProvider.GetRequiredService<IConfiguration>())
-                .AddConfiguration(await GetApplicationConfigurationAsync());
+                .AddConfiguration(
+                    TestServicesProvider.GetRequiredService<IConfiguration>());
 
+        // application config override
         ConfigureApplicationConfiguration(builder);
 
         return builder.Build();
