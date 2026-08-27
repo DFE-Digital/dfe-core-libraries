@@ -1,39 +1,18 @@
-﻿using DfE.Core.Libraries.Testing;
-using DfE.Core.Libraries.Testing.Services;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿namespace DfE.Core.Libraries.IntegrationTests.Abstractions;
 
-namespace DfE.Core.Libraries.IntegrationTests.Abstractions;
-
-public abstract class IntegrationTestBase : IAsyncDisposable
+public abstract class IntegrationTestsBase : IAsyncDisposable
 {
-    private IServiceProvider? _applicationServicesRootProvider;
-    protected IntegrationTestBase(IServiceProvider testServicesProvider)
+    private bool _started;
+
+    protected async ValueTask StartTestAsync(
+        CancellationToken ct = default)
     {
-        if (testServicesProvider == null)
+        if (_started)
         {
-            throw new ArgumentNullException(nameof(testServicesProvider));
+            throw new InvalidOperationException("Test has already started");
         }
-        TestServicesProvider = testServicesProvider;
-    }
 
-    protected IServiceProvider TestServicesProvider { get; }
-
-    private IServiceProvider ApplicationServicesRootProvider
-    {
-        get => _applicationServicesRootProvider ??
-            throw new InvalidOperationException("Application services have not been initialised");
-
-        set => _applicationServicesRootProvider = value ??
-            throw new ArgumentNullException(nameof(value));
-    }
-
-    protected async ValueTask StartTestAsync(CancellationToken ct = default)
-    {
-        if (_applicationServicesRootProvider is not null)
-        {
-            throw new InvalidOperationException("Test already started");
-        }
+        _started = true;
 
         await BeforeStartTestDependenciesAsync(ct);
 
@@ -41,79 +20,31 @@ public abstract class IntegrationTestBase : IAsyncDisposable
 
         await AfterStartTestDependenciesAsync(ct);
 
-        ApplicationServicesRootProvider =
-            BuildApplicationServices(
-                configuration: await MergeTestAndApplicationConfiguration(),
-                configure: ConfigureApplicationServices);
+        await StartApplicationAsync(ct);
     }
 
     public async ValueTask DisposeAsync()
     {
         GC.SuppressFinalize(this);
+
         await BeforeDisposeAsync();
 
-        if (_applicationServicesRootProvider is IAsyncDisposable asyncDisposable)
-        {
-            await asyncDisposable.DisposeAsync();
-        }
-        else if (_applicationServicesRootProvider is IDisposable disposable)
-        {
-            disposable.Dispose();
-        }
+        await DisposeApplicationAsync();
 
         await AfterDisposeAsync();
     }
 
     protected virtual Task BeforeStartTestDependenciesAsync(CancellationToken ct = default) => Task.CompletedTask;
+
     protected virtual Task StartTestDependenciesAsync(CancellationToken ct = default) => Task.CompletedTask;
+
     protected virtual Task AfterStartTestDependenciesAsync(CancellationToken ct = default) => Task.CompletedTask;
-    protected virtual void ConfigureApplicationServices(IServiceCollection services, IConfiguration configuration) { }
-    protected virtual void ConfigureApplicationConfiguration(IConfigurationBuilder builder) { }
-    protected virtual Task<IConfiguration> GetApplicationConfigurationAsync() =>
-        Task.FromResult(
-            ConfigurationDefault.Create());
 
-    // BeforeDisposeAsync runs BEFORE application services are disposed.
-    // Use this to clean up external resources (e.g., databases, containers).
+    protected virtual Task StartApplicationAsync(CancellationToken ct = default) => Task.CompletedTask;
+
+    protected virtual Task DisposeApplicationAsync() => Task.CompletedTask;
+
     protected virtual Task BeforeDisposeAsync() => Task.CompletedTask;
+
     protected virtual Task AfterDisposeAsync() => Task.CompletedTask;
-
-    protected TSingletonService ResolveSingletonApplicationService<TSingletonService>() where TSingletonService : notnull
-    {
-        return ApplicationServicesRootProvider.GetRequiredService<TSingletonService>();
-    }
-
-    protected async Task<TResult> RunScopedAsync<TService, TResult>(Func<TService, Task<TResult>> action) where TService : notnull
-    {
-        using IServiceScope scope = ApplicationServicesRootProvider.CreateScope();
-
-        TService service = scope.ServiceProvider.GetRequiredService<TService>();
-
-        return await action(service);
-    }
-
-    private async Task<IConfiguration> MergeTestAndApplicationConfiguration()
-    {
-        IConfigurationBuilder builder =
-            ConfigurationDefault.CreateBuilder()
-        // add test config
-            .AddConfiguration(TestServicesProvider.GetRequiredService<IConfiguration>())
-        // add app config
-            .AddConfiguration(await GetApplicationConfigurationAsync());
-
-        ConfigureApplicationConfiguration(builder);
-
-        return builder.Build();
-    }
-
-    private static IServiceProvider BuildApplicationServices(IConfiguration configuration, Action<IServiceCollection, IConfiguration>? configure = null)
-    {
-        IServiceCollection services = ServiceCollectionDefaults.Create();
-        configure?.Invoke(services, configuration);
-        services.AddSingleton((sp) => configuration);
-
-        IServiceProvider provider = services.BuildServiceProvider(ServiceProviderOptionsDefaults.Default);
-
-        return provider;
-    }
 }
