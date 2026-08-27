@@ -45,7 +45,7 @@ public abstract class ServiceProviderTestsBase : IntegrationTestsBase
 
     protected virtual void ConfigureApplicationConfiguration(IConfigurationBuilder builder) { }
 
-    protected virtual Task<IConfiguration> GetApplicationConfigurationAsync() => Task.FromResult(ConfigurationDefault.Create());
+    protected virtual Task<IConfiguration> BuildApplicationConfigurationAsync() => Task.FromResult(ConfigurationDefault.Create());
 
     protected TSingletonService ResolveSingletonApplicationService<TSingletonService>()
         where TSingletonService : notnull
@@ -69,10 +69,18 @@ public abstract class ServiceProviderTestsBase : IntegrationTestsBase
 
     private async Task<IConfiguration> MergeTestAndApplicationConfiguration()
     {
+        // Precendence for IConfiguration
+
+        // Test IConfiguration (could be XUnit.DI)
+
+        // root Application IConfiguration (override)
+
+        // Then apply ConfigureApplicationConfiguration (test override)
+
         IConfigurationBuilder builder =
             ConfigurationDefault.CreateBuilder()
                 .AddConfiguration(TestServicesProvider.GetRequiredService<IConfiguration>())
-                .AddConfiguration(await GetApplicationConfigurationAsync());
+                .AddConfiguration(await BuildApplicationConfigurationAsync());
 
         ConfigureApplicationConfiguration(builder);
 
