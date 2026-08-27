@@ -11,7 +11,6 @@ namespace DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Provid
 internal sealed class PostgresDatabaseProvider : IPostgresDatabaseProvider
 {
     private const int PostgresPort = 5432;
-    private const string LocalhostConnectionName = "localhost";
     private readonly IContainerRegistry _containerRegistry;
     private readonly IOptionsMonitor<PostgresContainerOptions> _options;
 
@@ -64,7 +63,7 @@ internal sealed class PostgresDatabaseProvider : IPostgresDatabaseProvider
 
         if (string.IsNullOrWhiteSpace(networkName))
         {
-            builder.Host = LocalhostConnectionName;
+            builder.Host = container.Hostname;
             builder.Port = container.GetMappedPublicPort(PostgresPort);
 
             return builder.ConnectionString;
