@@ -1,5 +1,4 @@
 ﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options.Container;
-using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
