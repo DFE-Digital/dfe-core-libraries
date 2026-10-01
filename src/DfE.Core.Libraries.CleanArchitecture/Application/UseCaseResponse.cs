@@ -2,7 +2,7 @@
 
 /// <summary>
 /// Represents the outcome of a typical use-case operation,
-/// including success/failure state, an optional model object, and error information.
+/// including success/failure state, an model object, and error information.
 /// </summary>
 /// <typeparam name="TModel">
 /// The type of the model returned when the operation succeeds.
@@ -13,10 +13,9 @@
 ///   <item><description><see cref="Success(TModel)"/> for successful operations with a model result.</description></item>
 ///   <item><description><see cref="Failure(string)"/> for failed operations with an error message.</description></item>
 /// </list>
-/// Consumers should check both <see cref="SuccessfulRequest"/> and <see cref="HasModel"/> 
-/// before using the <see cref="Model"/> property.
+/// Consumers should check <see cref="SuccessfulRequest"/> before using the <see cref="Model"/> property. />
 /// </remarks>
-public sealed class UseCaseResponse<TModel>
+public sealed class UseCaseResponse<TModel> where TModel : notnull
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="UseCaseResponse{TModel}"/> class.
@@ -25,10 +24,10 @@ public sealed class UseCaseResponse<TModel>
     /// <param name="model">The model returned by the operation, if any.</param>
     /// <param name="errorMessage">The error message if the operation failed.</param>
     private UseCaseResponse(
-        bool successfulRequest, TModel? model, string? errorMessage)
+        bool successfulRequest, TModel model, string? errorMessage)
     {
         SuccessfulRequest = successfulRequest;
-        Model = model;
+        Model = model ?? throw new ArgumentNullException(nameof(model));
         ErrorMessage = errorMessage;
     }
 
@@ -49,8 +48,8 @@ public sealed class UseCaseResponse<TModel>
     /// <returns>
     /// A <see cref="UseCaseResponse{TModel}"/> representing a failed request.
     /// </returns>
-    public static UseCaseResponse<TModel> Failure(string error) =>
-        new(successfulRequest: false, model: default, error);
+    public static UseCaseResponse<TModel> Failure(TModel model, string error) =>
+        new(successfulRequest: false, model: model, error);
 
     /// <summary>
     /// Indicates whether the operation succeeded.
@@ -66,10 +65,9 @@ public sealed class UseCaseResponse<TModel>
     /// Gets the value returned by the operation if successful.
     /// </summary>
     /// <remarks>
-    /// This property will contain the model object when <see cref="SuccessfulRequest"/> is <c>true</c>.
-    /// It will be <c>null</c> if the operation failed or if no model was produced.
+    /// This property will always contain the model object</c>.
     /// </remarks>
-    public TModel? Model { get; }
+    public TModel Model { get; }
 
     /// <summary>
     /// Gets the error message if the operation failed.
@@ -79,20 +77,4 @@ public sealed class UseCaseResponse<TModel>
     /// It will be <c>null</c> if the operation succeeded.
     /// </remarks>
     public string? ErrorMessage { get; }
-
-    /// <summary>
-    /// Determines whether the current response contains a non-null model.
-    /// </summary>
-    /// <remarks>
-    /// This method is a convenience check that returns <c>true</c> if the
-    /// <see cref="Model"/> property is not <c>null</c>, and <c>false</c> otherwise.
-    /// It does not consider the <see cref="SuccessfulRequest"/> flag; callers should
-    /// check both <see cref="SuccessfulRequest"/> and <see cref="HasModel"/> 
-    /// to ensure the response is both successful and contains a usable model.
-    /// </remarks>
-    /// <returns>
-    /// <c>true</c> if the <see cref="Model"/> property is not <c>null</c>;
-    /// otherwise, <c>false</c>.
-    /// </returns>
-    public bool HasModel() => Model != null;
 }
