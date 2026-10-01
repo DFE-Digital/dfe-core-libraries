@@ -27,7 +27,7 @@ public sealed class UseCaseResponse<TModel> where TModel : notnull
         bool successfulRequest, TModel model, string? errorMessage)
     {
         SuccessfulRequest = successfulRequest;
-        Model = model;
+        Model = model ?? throw new ArgumentNullException(nameof(model));
         ErrorMessage = errorMessage;
     }
 
