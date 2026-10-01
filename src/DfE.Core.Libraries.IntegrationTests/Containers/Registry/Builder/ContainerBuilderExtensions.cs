@@ -3,6 +3,7 @@ using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
+using DotNet.Testcontainers.Images;
 using DotNet.Testcontainers.Networks;
 
 namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry.Builder;
@@ -20,7 +21,10 @@ public static class ContainerBuilderExtensions
                 .WithImage(options.Image)
                 .WithExposedPorts<TBuilder, TContainer, TConfiguration>(options.PortMappings ?? [])
                 .WithStartupCommands<TBuilder, TContainer, TConfiguration>(options.StartupArguments ?? [])
-                .WithMountedResources<TBuilder, TContainer, TConfiguration>(options.CopyResourcesIntoContainerBeforeInit ?? []);
+                .WithMountedResources<TBuilder, TContainer, TConfiguration>(options.CopyResourcesIntoContainerBeforeInit ?? [])
+                // pull when branch specified e.g. :main,
+                // otherwise pull if missing for e.g. specific digest sha:31231 locally or remote
+                .WithImagePullPolicy(!string.IsNullOrEmpty(options.ImageTag) ? PullPolicy.Always : PullPolicy.Missing);
 
         if (options.Labels.Any())
         {

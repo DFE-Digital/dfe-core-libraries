@@ -4,6 +4,7 @@ using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry.Build
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
+using DotNet.Testcontainers.Images;
 using Microsoft.Extensions.Options;
 
 namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
@@ -34,7 +35,8 @@ public sealed class DefaultContainerFactory : IContainerFactory
             new(options.Image);
 
         builder =
-            builder.WithContainerOptions<
+            builder
+            .WithContainerOptions<
                 ContainerBuilder,
                 IContainer,
                 IContainerConfiguration>(options);
