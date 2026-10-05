@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 
-namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options.Container;
+namespace DfE.Core.Libraries.IntegrationTests.Containers.Options.Container;
 
 internal sealed class ContainerOptionsValidator : IValidateOptions<ContainerOptions>
 {

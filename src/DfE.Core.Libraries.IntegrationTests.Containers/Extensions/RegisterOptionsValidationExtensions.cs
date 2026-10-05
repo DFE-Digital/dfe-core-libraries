@@ -1,9 +1,9 @@
-﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options.Container;
+﻿using DfE.Core.Libraries.IntegrationTests.Containers.Options.Container;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
-namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Extensions;
+namespace DfE.Core.Libraries.IntegrationTests.Containers.Extensions;
 
 public static class RegisterOptionsValidationExtensions
 {

@@ -1,6 +1,6 @@
 ﻿using DotNet.Testcontainers.Containers;
 
-namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
+namespace DfE.Core.Libraries.IntegrationTests.Containers.Registry;
 
 public interface IContainerRegistry
 {
