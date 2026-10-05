@@ -1,13 +1,13 @@
-﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options.Container;
-using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
-using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry.BuilderHandler;
+﻿using DfE.Core.Libraries.IntegrationTests.Containers.Options.Container;
+using DfE.Core.Libraries.IntegrationTests.Containers.Registry;
+using DfE.Core.Libraries.IntegrationTests.Containers.Registry.Builder;
 using DotNet.Testcontainers.Builders;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
-namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Extensions;
+namespace DfE.Core.Libraries.IntegrationTests.Containers.Extensions;
 
 public static class RegisterContainerExtensions
 {

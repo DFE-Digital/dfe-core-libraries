@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Networks;
 
-namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
+namespace DfE.Core.Libraries.IntegrationTests.Containers.Registry;
 
 internal sealed class ContainerNetworkRegistry : IContainerNetworkRegistry
 {

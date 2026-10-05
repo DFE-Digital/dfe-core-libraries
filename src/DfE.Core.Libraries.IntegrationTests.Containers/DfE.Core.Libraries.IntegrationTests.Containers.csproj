@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <RootNamespace>DfE.Core.Libraries.IntegrationTests.Abstractions</RootNamespace>
+    <RootNamespace>DfE.Core.Libraries.IntegrationTests.Containers</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,10 +11,7 @@
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Testcontainers" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\DfE.Core.Libraries.Testing\DfE.Core.Libraries.Testing.csproj" />
-  </ItemGroup>
-
+  
 </Project>

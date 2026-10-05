@@ -1,6 +1,6 @@
-﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
+﻿using DfE.Core.Libraries.IntegrationTests.Containers.Registry;
 
-namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Extensions;
+namespace DfE.Core.Libraries.IntegrationTests.Containers.Extensions;
 
 public sealed record ContainerFactoryRegistration
 {

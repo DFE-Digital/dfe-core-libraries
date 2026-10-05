@@ -1,8 +1,7 @@
-﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
-using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry.Builder;
+﻿using DfE.Core.Libraries.IntegrationTests.Containers.Registry;
+using DfE.Core.Libraries.IntegrationTests.Containers.Registry.Builder;
 using DfE.Core.Libraries.IntegrationTests.Database.Postgres.Container.Options;
 using DotNet.Testcontainers.Containers;
-using DotNet.Testcontainers.Images;
 using Microsoft.Extensions.Options;
 using Testcontainers.PostgreSql;
 

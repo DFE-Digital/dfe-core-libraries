@@ -1,4 +1,4 @@
-﻿namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options.Networks;
+﻿namespace DfE.Core.Libraries.IntegrationTests.Containers.Options.Networks;
 
 public sealed class ContainerNetworkOptions
 {

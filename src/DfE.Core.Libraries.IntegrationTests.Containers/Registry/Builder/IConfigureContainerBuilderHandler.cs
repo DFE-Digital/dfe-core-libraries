@@ -1,4 +1,4 @@
-﻿namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry.BuilderHandler;
+﻿namespace DfE.Core.Libraries.IntegrationTests.Containers.Registry.Builder;
 
 public interface IConfigureContainerBuilderHandler<TBuilder>
     where TBuilder : class

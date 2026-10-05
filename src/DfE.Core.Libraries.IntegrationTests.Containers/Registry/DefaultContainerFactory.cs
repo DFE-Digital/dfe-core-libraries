@@ -1,13 +1,12 @@
-﻿using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Options.Container;
-using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry.Builder;
-using DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry.BuilderHandler;
+﻿using DfE.Core.Libraries.IntegrationTests.Containers.Options.Container;
+using DfE.Core.Libraries.IntegrationTests.Containers.Registry.Builder;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
 using DotNet.Testcontainers.Images;
 using Microsoft.Extensions.Options;
 
-namespace DfE.Core.Libraries.IntegrationTests.Abstractions.Containers.Registry;
+namespace DfE.Core.Libraries.IntegrationTests.Containers.Registry;
 
 public sealed class DefaultContainerFactory : IContainerFactory
 {
