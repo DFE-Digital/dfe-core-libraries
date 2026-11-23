@@ -4,7 +4,7 @@ namespace DfE.Core.Libraries.Testing.Logger;
 
 public sealed class InMemoryLogger<TLogCategory> : ILogger<TLogCategory>
 {
-    public List<string> Logs { get; } = [];
+    public List<LoggedMessage> Logs { get; } = [];
 
     public IDisposable BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
 
@@ -15,15 +15,17 @@ public sealed class InMemoryLogger<TLogCategory> : ILogger<TLogCategory>
         EventId eventId,
         TState state,
         Exception? exception,
-        Func<TState, Exception?,
-        string> formatter)
+        Func<TState, Exception?, string> formatter)
     {
-        Logs.Add(formatter(state, exception));
+        Logs.Add(
+            new LoggedMessage(
+                formatter(state, exception),
+                logLevel));
     }
+}
 
-    private class NullScope : IDisposable
-    {
-        public static NullScope Instance { get; } = new();
-        public void Dispose() { }
-    }
+internal sealed class NullScope : IDisposable
+{
+    public static NullScope Instance { get; } = new();
+    public void Dispose() { }
 }
